@@ -9,11 +9,13 @@ import 'package:agrismart/theme/app_theme.dart';
 class ZoneDetailPage extends StatefulWidget {
   final Zone zone;
   final List<String> nomsAutres;
+  final ValueChanged<int>? onSelectNavIndex;
 
   const ZoneDetailPage({
     super.key,
     required this.zone,
     this.nomsAutres = const [],
+    this.onSelectNavIndex,
   });
 
   @override
@@ -63,6 +65,15 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
       }
     } catch (_) {}
     return widget.zone;
+  }
+
+  int _lireNombreAIrriguer(ZonesProvider provider, Zone zoneCourante) {
+    final dynamic dyn = provider;
+    try {
+      final val = dyn.nombreAIrriguer;
+      if (val is int) return val;
+    } catch (_) {}
+    return zoneCourante.besoinIrrigation ? 1 : 0;
   }
 
   String _formatHeureNow() {
@@ -235,10 +246,18 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
     Navigator.pop(context, nouvelleZone);
   }
 
+  void _naviguerVersBas(int index) {
+    if (widget.onSelectNavIndex != null) {
+      widget.onSelectNavIndex!(index);
+    }
+    Navigator.popUntil(context, (route) => route.isFirst);
+  }
+
   @override
   Widget build(BuildContext context) {
     final zonesProvider = context.watch<ZonesProvider>();
     final zone = _zoneReelle(zonesProvider);
+    final int aIrriguer = _lireNombreAIrriguer(zonesProvider, zone);
 
     final Color couleurEtat =
     zone.besoinIrrigation ? AppTheme.echec : AppTheme.succes;
@@ -639,6 +658,40 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                 }).toList(),
               );
             },
+          ),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: 1,
+        onDestinationSelected: _naviguerVersBas,
+        destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
+          NavigationDestination(
+            icon: Badge(
+              label: Text('$aIrriguer'),
+              isLabelVisible: aIrriguer > 0,
+              child: const Icon(Icons.grass_outlined),
+            ),
+            selectedIcon: Badge(
+              label: Text('$aIrriguer'),
+              isLabelVisible: aIrriguer > 0,
+              child: const Icon(Icons.grass),
+            ),
+            label: 'Zones',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'Statistiques',
+          ),
+          const NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profil',
           ),
         ],
       ),
