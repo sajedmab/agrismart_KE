@@ -5,7 +5,16 @@ import 'package:agrismart/screens/zone_form_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 
 class AccueilPage extends StatefulWidget {
-  const AccueilPage({super.key});
+  final VoidCallback? onAllerZones;
+  final VoidCallback? onAllerStatistiques;
+  final VoidCallback? onAllerProfil;
+
+  const AccueilPage({
+    super.key,
+    this.onAllerZones,
+    this.onAllerStatistiques,
+    this.onAllerProfil,
+  });
 
   @override
   State<AccueilPage> createState() => AccueilPageState();
@@ -94,8 +103,8 @@ class AccueilPageState extends State<AccueilPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: const [
+                  const Row(
+                    children: [
                       Icon(Icons.eco, color: Color(0xFF4CAF50), size: 32),
                       SizedBox(width: 6),
                       Text(
@@ -117,7 +126,7 @@ class AccueilPageState extends State<AccueilPage> {
                           size: 24,
                         ),
                         onPressed: () {
-                          // TODO: ouvrir notifications / alertes
+                          _afficherMessage('Notifications & Alertes');
                         },
                       ),
                       IconButton(
@@ -126,9 +135,10 @@ class AccueilPageState extends State<AccueilPage> {
                           color: Color(0xFFE88D2A),
                           size: 26,
                         ),
-                        onPressed: () {
-                          // TODO: ouvrir profil
-                        },
+                        onPressed: widget.onAllerProfil ??
+                                () {
+                              _afficherMessage('Profil');
+                            },
                       ),
                     ],
                   ),
@@ -146,9 +156,9 @@ class AccueilPageState extends State<AccueilPage> {
                 ),
                 child: Column(
                   children: [
-                    Row(
+                    const Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
+                      children: [
                         Text(
                           "Aujourd'hui",
                           style: TextStyle(
@@ -198,10 +208,10 @@ class AccueilPageState extends State<AccueilPage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Column(
+                      child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Météo Kébili',
                             style: TextStyle(
                               fontSize: 14,
@@ -209,10 +219,10 @@ class AccueilPageState extends State<AccueilPage> {
                               color: Color(0xFF1F2937),
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: const [
+                            children: [
                               Text(
                                 '32°C',
                                 style: TextStyle(
@@ -236,11 +246,12 @@ class AccueilPageState extends State<AccueilPage> {
                   Expanded(
                     child: InkWell(
                       borderRadius: BorderRadius.circular(10),
-                      onTap: () {
-                        if (_zones.isNotEmpty) {
-                          _ouvrirDetail(_zones.first);
-                        }
-                      },
+                      onTap: widget.onAllerZones ??
+                              () {
+                            if (_zones.isNotEmpty) {
+                              _ouvrirDetail(_zones.first);
+                            }
+                          },
                       child: Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -316,7 +327,8 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.description_outlined,
                     label: 'Guides & Rapports',
-                    onTap: () => _afficherMessage('Guides & Rapports'),
+                    onTap: widget.onAllerStatistiques ??
+                            () => _afficherMessage('Guides & Rapports'),
                   ),
                 ],
               ),
@@ -330,10 +342,10 @@ class AccueilPageState extends State<AccueilPage> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Column(
+                child: const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Tâches à venir',
                       style: TextStyle(
                         fontSize: 15,
@@ -341,9 +353,9 @@ class AccueilPageState extends State<AccueilPage> {
                         color: Color(0xFF1F2937),
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Row(
-                      children: const [
+                      children: [
                         Icon(
                           Icons.shopping_basket_outlined,
                           color: Color(0xFFC2410C),

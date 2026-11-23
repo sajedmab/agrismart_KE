@@ -1,8 +1,8 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
+import 'package:agrismart/screens/accueil_page.dart';
 import 'package:agrismart/screens/profil_page.dart';
 import 'package:agrismart/screens/statistiques_page.dart';
 import 'package:agrismart/screens/zones_page.dart';
@@ -31,6 +31,12 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  void _allerVersOnglet(int index) {
+    setState(() {
+      _onglet = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final aIrriguer = context.select<ZonesProvider, int>(
@@ -50,20 +56,26 @@ class _AppShellState extends State<AppShell> {
       ),
       body: IndexedStack(
         index: _onglet,
-        children: const [
-          ZonesPage(),
-          StatistiquesPage(),
-          ProfilPage(),
+        children: [
+          AccueilPage(
+            onAllerZones: () => _allerVersOnglet(1),
+            onAllerStatistiques: () => _allerVersOnglet(2),
+            onAllerProfil: () => _allerVersOnglet(3),
+          ),
+          const ZonesPage(),
+          const StatistiquesPage(),
+          const ProfilPage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _onglet,
-        onDestinationSelected: (index) {
-          setState(() {
-            _onglet = index;
-          });
-        },
+        onDestinationSelected: _allerVersOnglet,
         destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
           NavigationDestination(
             icon: Badge(
               label: Text('$aIrriguer'),
