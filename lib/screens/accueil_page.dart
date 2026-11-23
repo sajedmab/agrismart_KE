@@ -4,6 +4,7 @@ import 'package:agrismart/models/zone.dart';
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/meteo_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
+import 'package:agrismart/screens/assistant_ia_page.dart';
 import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
@@ -222,6 +223,17 @@ class AccueilPageState extends State<AccueilPage> {
       return Icons.cloud_outlined;
     }
     return Icons.wb_sunny_outlined;
+  }
+
+  Future<void> _ouvrirAssistantIa(Zone? zoneCible) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AssistantIaPage(
+          zoneInitiale: zoneCible,
+        ),
+      ),
+    );
   }
 
   Future<void> _ouvrirNotifications() async {
@@ -478,7 +490,7 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 12),
 
-              // 4. Grille des cartes vertes (تتضمن البطاقة التاسعة: Détails Parcelle)
+              // 4. Grille des cartes vertes
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -490,7 +502,7 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.smart_toy,
                     label: 'Assistant IA',
-                    onTap: () => _afficherMessage('Assistant IA'),
+                    onTap: () => _ouvrirAssistantIa(zoneCible),
                   ),
                   _BoutonVert(
                     icon: Icons.qr_code_scanner,
