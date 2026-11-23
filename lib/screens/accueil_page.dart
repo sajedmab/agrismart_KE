@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:agrismart/data/jeu_de_donnees.dart';
+import 'package:provider/provider.dart';
 import 'package:agrismart/models/zone.dart';
-import 'package:agrismart/screens/zone_form_page.dart';
+import 'package:agrismart/providers/auth_provider.dart';
+import 'package:agrismart/providers/meteo_provider.dart';
+import 'package:agrismart/providers/zones_provider.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
+import 'package:agrismart/screens/zone_form_page.dart';
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -21,85 +24,270 @@ class AccueilPage extends StatefulWidget {
 }
 
 class AccueilPageState extends State<AccueilPage> {
-  final List<Zone> _zones = jeuDeDonnees();
-
-  int _nombreZonesAIrriguer() {
-    return _zones.where((z) => z.humidite < 35.0).length;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _appelerMethodeSiExiste(context.read<MeteoProvider>(), [
+        'chargerMeteo',
+        'fetchMeteo',
+        'actualiser',
+      ]);
+      _appelerMethodeSiExiste(context.read<ZonesProvider>(), [
+        'chargerZones',
+        'fetchZones',
+        'actualiser',
+      ]);
+    });
   }
 
-  Future<void> _ouvrirFormulaire({Zone? zone}) async {
+  void _appelerMethodeSiExiste(Object target, List<String> nomsMethodes) {
+    final dynamic dyn = target;
+    for (final nom in nomsMethodes) {
+      try {
+        if (nom == 'chargerMeteo') dyn.chargerMeteo();
+        if (nom == 'fetchMeteo') dyn.fetchMeteo();
+        if (nom == 'chargerZones') dyn.chargerZones();
+        if (nom == 'fetchZones') dyn.fetchZones();
+        if (nom == 'actualiser') dyn.actualiser();
+        return;
+      } catch (_) {}
+    }
+  }
+
+  String _dateFormatee() {
+    final now = DateTime.now();
+    const jours = [
+      'Lundi',
+      'Mardi',
+      'Mercredi',
+      'Jeudi',
+      'Vendredi',
+      'Samedi',
+      'Dimanche',
+    ];
+    const mois = [
+      'Janv',
+      'Févr',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juil',
+      'Août',
+      'Sept',
+      'Oct',
+      'Nov',
+      'Déc',
+    ];
+    final jourNom = jours[now.weekday - 1];
+    final moisNom = mois[now.month - 1];
+    return '$jourNom ${now.day} $moisNom';
+  }
+
+  String _nomUtilisateur(AuthProvider authProvider) {
+    final dynamic a = authProvider;
+    final dynamic user = _extractUser(a);
+
+    final candidates = <dynamic>[
+      _tryProperty(user, 'nomComplet'),
+      _tryProperty(user, 'nom'),
+      _tryProperty(user, 'displayName'),
+      _tryProperty(user, 'email'),
+      _tryProperty(a, 'nomUtilisateur'),
+      _tryProperty(a, 'nom'),
+    ];
+
+    for (final val in candidates) {
+      if (val is String && val.trim().isNotEmpty) {
+        return val.trim();
+      }
+    }
+    return 'Utilisateur';
+  }
+
+  dynamic _extractUser(dynamic a) {
+    for (final prop in ['utilisateur', 'user', 'currentUser']) {
+      final res = _tryProperty(a, prop);
+      if (res != null) return res;
+    }
+    return null;
+  }
+
+  dynamic _tryProperty(dynamic obj, String name) {
+    if (obj == null) return null;
+    try {
+      if (obj is Map) return obj[name];
+      switch (name) {
+        case 'utilisateur':
+          return obj.utilisateur;
+        case 'user':
+          return obj.user;
+        case 'currentUser':
+          return obj.currentUser;
+        case 'nomComplet':
+          return obj.nomComplet;
+        case 'nom':
+          return obj.nom;
+        case 'displayName':
+          return obj.displayName;
+        case 'email':
+          return obj.email;
+        case 'nomUtilisateur':
+          return obj.nomUtilisateur;
+        case 'meteo':
+          return obj.meteo;
+        case 'currentMeteo':
+          return obj.currentMeteo;
+        case 'donnees':
+          return obj.donnees;
+        case 'ville':
+          return obj.ville;
+        case 'city':
+          return obj.city;
+        case 'temperature':
+          return obj.temperature;
+        case 'temp':
+          return obj.temp;
+        case 'description':
+          return obj.description;
+        case 'condition':
+          return obj.condition;
+        case 'zones':
+          return obj.zones;
+        case 'nombreAIrriguer':
+          return obj.nombreAIrriguer;
+        default:
+          return null;
+      }
+    } catch (_) {
+      return null;
+    }
+  }
+
+  dynamic _extractMeteoData(MeteoProvider meteoProvider) {
+    final dynamic m = meteoProvider;
+    for (final prop in ['meteo', 'currentMeteo', 'donnees']) {
+      final res = _tryProperty(m, prop);
+      if (res != null) return res;
+    }
+    return null;
+  }
+
+  String _villeMeteo(MeteoProvider meteoProvider) {
+    final dynamic m = meteoProvider;
+    final dynamic data = _extractMeteoData(meteoProvider);
+    final ville =
+        _tryProperty(data, 'ville') ??
+            _tryProperty(data, 'city') ??
+            _tryProperty(m, 'ville');
+    if (ville is String && ville.trim().isNotEmpty) {
+      return ville.trim();
+    }
+    return 'Kébili';
+  }
+
+  String _temperatureMeteo(MeteoProvider meteoProvider) {
+    final dynamic m = meteoProvider;
+    final dynamic data = _extractMeteoData(meteoProvider);
+    final temp =
+        _tryProperty(data, 'temperature') ??
+            _tryProperty(data, 'temp') ??
+            _tryProperty(m, 'temperature') ??
+            _tryProperty(m, 'temp');
+
+    if (temp is num) {
+      return '${temp.round()}°C';
+    }
+    if (temp is String && temp.trim().isNotEmpty) {
+      return temp.contains('°') ? temp.trim() : '${temp.trim()}°C';
+    }
+    return '--°C';
+  }
+
+  IconData _iconeMeteo(MeteoProvider meteoProvider) {
+    final dynamic data = _extractMeteoData(meteoProvider);
+    final desc = (_tryProperty(data, 'description') ??
+        _tryProperty(data, 'condition') ??
+        '')
+        .toString()
+        .toLowerCase();
+
+    if (desc.contains('pluie') || desc.contains('rain')) {
+      return Icons.grain;
+    }
+    if (desc.contains('nuage') || desc.contains('cloud')) {
+      return Icons.cloud_outlined;
+    }
+    return Icons.wb_sunny_outlined;
+  }
+
+  Future<void> _ouvrirFormulaire(List<Zone> zones, {Zone? zone}) async {
     final nouvelleZone = await Navigator.push<Zone>(
       context,
       MaterialPageRoute(
         builder: (_) => ZoneFormPage(
           zone: zone,
-          nomsExistants: _zones
-              .where((z) => z != zone)
-              .map((z) => z.nom)
-              .toList(),
+          nomsExistants: zones.where((z) => z != zone).map((z) => z.nom).toList(),
         ),
       ),
     );
 
     if (nouvelleZone == null || !mounted) return;
 
-    setState(() {
-      if (zone == null) {
-        _zones.add(nouvelleZone);
-      } else {
-        final index = _zones.indexOf(zone);
-        if (index != -1) {
-          _zones[index] = nouvelleZone;
-        }
-      }
-    });
+    final dynamic zp = context.read<ZonesProvider>();
+    try {
+      await zp.ajouterZone(nouvelleZone);
+    } catch (_) {}
 
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(zone == null ? 'Zone ajoutée' : 'Zone modifiée'),
-      ),
+      SnackBar(content: Text(zone == null ? 'Zone ajoutée' : 'Zone modifiée')),
     );
   }
 
-  Future<void> _ouvrirDetail(Zone zone) async {
-    final zoneModifiee = await Navigator.push<Zone>(
+  Future<void> _ouvrirDetail(List<Zone> zones, Zone zone) async {
+    await Navigator.push<Zone>(
       context,
       MaterialPageRoute(
         builder: (_) => ZoneDetailPage(
           zone: zone,
-          nomsAutres: _zones
-              .where((z) => z != zone)
-              .map((z) => z.nom)
-              .toList(),
+          nomsAutres: zones.where((z) => z != zone).map((z) => z.nom).toList(),
         ),
       ),
     );
-
-    if (zoneModifiee == null || !mounted) return;
-
-    setState(() {
-      final index = _zones.indexOf(zone);
-      if (index != -1) {
-        _zones[index] = zoneModifiee;
-      }
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final int zonesAIrriguer = _nombreZonesAIrriguer();
+    final authProvider = context.watch<AuthProvider>();
+    final meteoProvider = context.watch<MeteoProvider>();
+    final zonesProvider = context.watch<ZonesProvider>();
+
+    final rawZones = _tryProperty(zonesProvider, 'zones');
+    final List<Zone> zones = rawZones is List<Zone> ? rawZones : const [];
+
+    final rawAlertes = _tryProperty(zonesProvider, 'nombreAIrriguer');
+    final int zonesAIrriguer = rawAlertes is int
+        ? rawAlertes
+        : zones.where((z) => z.humidite < 35.0).length;
+
+    final String nomUser = _nomUtilisateur(authProvider);
     final String zonePrincipale =
-    _zones.isNotEmpty ? _zones.first.nom : 'Parcelle Nord';
+    zones.isNotEmpty ? zones.first.nom : 'Parcelle Nord';
+    final String ville = _villeMeteo(meteoProvider);
+    final String temperature = _temperatureMeteo(meteoProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F0),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.fromLTRB(14, 10, 14, 90),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 1. Header: AgriSmart + icônes à droite
+              // 1. Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -125,9 +313,8 @@ class AccueilPageState extends State<AccueilPage> {
                           color: Color(0xFFE88D2A),
                           size: 24,
                         ),
-                        onPressed: () {
-                          _afficherMessage('Notifications & Alertes');
-                        },
+                        onPressed: () =>
+                            _afficherMessage('Notifications & Alertes'),
                       ),
                       IconButton(
                         icon: const Icon(
@@ -136,9 +323,7 @@ class AccueilPageState extends State<AccueilPage> {
                           size: 26,
                         ),
                         onPressed: widget.onAllerProfil ??
-                                () {
-                              _afficherMessage('Profil');
-                            },
+                                () => _afficherMessage('Profil'),
                       ),
                     ],
                   ),
@@ -146,20 +331,21 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 8),
 
-              // 2. Carte "Aujourd'hui / Lundi 23 Nov" + nom & parcelle
+              // 2. Date réelle + Nom utilisateur + Zone
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
                   children: [
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
+                        const Text(
                           "Aujourd'hui",
                           style: TextStyle(
                             fontSize: 15,
@@ -168,8 +354,8 @@ class AccueilPageState extends State<AccueilPage> {
                           ),
                         ),
                         Text(
-                          'Lundi 23 Nov',
-                          style: TextStyle(
+                          _dateFormatee(),
+                          style: const TextStyle(
                             fontSize: 14,
                             color: Color(0xFF374151),
                           ),
@@ -177,9 +363,9 @@ class AccueilPageState extends State<AccueilPage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    const Text(
-                      'Ahmed Ben Ali',
-                      style: TextStyle(
+                    Text(
+                      nomUser,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF111827),
@@ -198,7 +384,7 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 10),
 
-              // 3. Deux cartes côte à côte: Météo Kébili + Alerte
+              // 3. Météo réelle + Alerte
               Row(
                 children: [
                   Expanded(
@@ -208,32 +394,34 @@ class AccueilPageState extends State<AccueilPage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Column(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Météo Kébili',
-                            style: TextStyle(
+                            'Météo $ville',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFF1F2937),
                             ),
                           ),
-                          SizedBox(height: 6),
+                          const SizedBox(height: 6),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                '32°C',
-                                style: TextStyle(
+                                temperature,
+                                style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF111827),
                                 ),
                               ),
                               Icon(
-                                Icons.wb_sunny_outlined,
-                                color: Color(0xFFEAB308),
+                                _iconeMeteo(meteoProvider),
+                                color: const Color(0xFFEAB308),
                                 size: 32,
                               ),
                             ],
@@ -248,8 +436,8 @@ class AccueilPageState extends State<AccueilPage> {
                       borderRadius: BorderRadius.circular(10),
                       onTap: widget.onAllerZones ??
                               () {
-                            if (_zones.isNotEmpty) {
-                              _ouvrirDetail(_zones.first);
+                            if (zones.isNotEmpty) {
+                              _ouvrirDetail(zones, zones.first);
                             }
                           },
                       child: Container(
@@ -290,7 +478,7 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 12),
 
-              // 4. Grille 2x3 des 6 boutons verts
+              // 4. Grille 2x3
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -334,10 +522,11 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 12),
 
-              // 5. Carte "Tâches à venir"
+              // 5. Tâches à venir
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
@@ -376,14 +565,13 @@ class AccueilPageState extends State<AccueilPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 70),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF56A832),
-        onPressed: () => _ouvrirFormulaire(),
+        onPressed: () => _ouvrirFormulaire(zones),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
