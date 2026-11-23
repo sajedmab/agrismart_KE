@@ -4,6 +4,7 @@ import 'package:agrismart/models/zone.dart';
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/meteo_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
+import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
 
@@ -221,6 +222,17 @@ class AccueilPageState extends State<AccueilPage> {
     return Icons.wb_sunny_outlined;
   }
 
+  Future<void> _ouvrirNotifications() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsPage(
+          onAllerZones: widget.onAllerZones,
+        ),
+      ),
+    );
+  }
+
   Future<void> _ouvrirFormulaire(List<Zone> zones, {Zone? zone}) async {
     final nouvelleZone = await Navigator.push<Zone>(
       context,
@@ -312,8 +324,7 @@ class AccueilPageState extends State<AccueilPage> {
                           color: Color(0xFFE88D2A),
                           size: 24,
                         ),
-                        onPressed: widget.onAllerZones ??
-                                () => _afficherMessage('Notifications & Alertes'),
+                        onPressed: _ouvrirNotifications,
                       ),
                       IconButton(
                         icon: const Icon(
@@ -510,8 +521,7 @@ class AccueilPageState extends State<AccueilPage> {
                         ? '$zonesAIrriguer parcelle(s) à irriguer'
                         : 'Aucune alerte',
                     badgeCount: zonesAIrriguer > 0 ? zonesAIrriguer : null,
-                    onTap: widget.onAllerZones ??
-                            () => _afficherMessage('Notifications & Alertes'),
+                    onTap: _ouvrirNotifications,
                   ),
                 ],
               ),
