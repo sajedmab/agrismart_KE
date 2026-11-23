@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agrismart/models/zone.dart';
@@ -26,12 +27,29 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
   String _horaireSelectionne = '06:30';
 
   final List<String> _horaires = ['06:30', '18:30', '21:00'];
-  final List<_LogIrrigation> _logs = [];
 
   @override
   void initState() {
     super.initState();
     _nomZone = widget.zone.nom;
+  }
+
+  String _zoneDocId(Zone zone) {
+    try {
+      final dynamic z = zone;
+      final id = z.id;
+      if (id is String && id.trim().isNotEmpty) {
+        return id.trim();
+      }
+    } catch (_) {}
+    return Uri.encodeComponent(zone.nom.trim().toLowerCase());
+  }
+
+  CollectionReference _historiqueCollection(Zone zone) {
+    return FirebaseFirestore.instance
+        .collection('zones')
+        .doc(_zoneDocId(zone))
+        .collection('historique_irrigations');
   }
 
   Zone _zoneReelle(ZonesProvider provider) {
@@ -61,72 +79,128 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
     return '$dd/$mo ${_formatHeureNow()}';
   }
 
+  String _formatEntreeHistorique(Map<String, dynamic> data) {
+    final rawTs = data['createdAt'];
+    final ts = rawTs is Timestamp ? rawTs : null;
+    final int duree = (data['dureeMinutes'] is num)
+        ? (data['dureeMinutes'] as num).round()
+        : 15;
+    final humApres = data['humiditeApres'];
+
+    String prefixDate;
+    if (ts == null) {
+      prefixDate = "Aujourd'hui, ${_formatHeureNow()}";
+    } else {
+      final dt = ts.toDate();
+      final now = DateTime.now();
+      final hh = dt.hour.toString().padLeft(2, '0');
+      final mm = dt.minute.toString().padLeft(2, '0');
+
+      final isToday =
+          dt.year == now.year && dt.month == now.month && dt.day == now.day;
+      final yesterday = now.subtract(const Duration(days: 1));
+      final isYesterday = dt.year == yesterday.year &&
+          dt.month == yesterday.month &&
+          dt.day == yesterday.day;
+
+      if (isToday) {
+        prefixDate = "Aujourd'hui, $hh:$mm";
+      } else if (isYesterday) {
+        prefixDate = "Hier, $hh:$mm";
+      } else {
+        final dd = dt.day.toString().padLeft(2, '0');
+        final mo = dt.month.toString().padLeft(2, '0');
+        prefixDate = '$dd/$mo $hh:$mm';
+      }
+    }
+
+    String texte = '$prefixDate - Irrigué pendant $duree min';
+    if (humApres is num) {
+      texte = '$texte (${humApres.toStringAsFixed(0)}%)';
+    }
+    return texte;
+  }
+
+  Future<void> _ajouterHistoriqueFirebase(
+      Zone zone, {
+        required int dureeMinutes,
+        required double humiditeApres,
+      }) async {
+    await _historiqueCollection(zone).add({
+      'zoneNom': zone.nom,
+      'dureeMinutes': dureeMinutes,
+      'humiditeApres': humiditeApres,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> _effacerHistoriqueFirebase(Zone zone) async {
+    final snapshot = await _historiqueCollection(zone).get();
+    final batch = FirebaseFirestore.instance.batch();
+    for (final doc in snapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Historique supprimé dans Firebase')),
+    );
+  }
+
   Future<void> _demarrerIrrigationReal(Zone zone) async {
     if (_enCours) return;
     setState(() => _enCours = true);
 
-    final dynamic zp = context.read<ZonesProvider>();
+    const int dureeMinutes = 15;
     final double nouvelleHumidite = (zone.humidite + 20.0).clamp(0.0, 100.0);
+    final dynamic zp = context.read<ZonesProvider>();
     bool ok = false;
 
-    // Njarbou les méthodes real li ykouno mawjoudin fi ZonesProvider
-    try {
-      await zp.irriguerZone(zone.nom);
-      ok = true;
-    } catch (_) {}
-
-    if (!ok) {
-      try {
-        await zp.irriguer(zone.nom);
-        ok = true;
-      } catch (_) {}
-    }
-
-    if (!ok) {
-      try {
-        await zp.basculerVanne(zone.nom);
-        ok = true;
-      } catch (_) {}
-    }
-
-    if (!ok) {
-      try {
-        await zp.mettreAJourHumidite(zone.nom, nouvelleHumidite);
-        ok = true;
-      } catch (_) {}
-    }
-
-    if (!ok) {
-      try {
+    for (final action in [
+          () async => await zp.irriguerZone(zone.nom),
+          () async => await zp.irriguer(zone.nom),
+          () async => await zp.basculerVanne(zone.nom),
+          () async => await zp.mettreAJourHumidite(zone.nom, nouvelleHumidite),
+          () async {
         final dynamic zDyn = zone;
         final Zone maj = zDyn.copyWith(
           humidite: nouvelleHumidite,
           vanneOuverte: true,
         );
         await zp.modifierZone(zone.nom, maj);
+      },
+    ]) {
+      try {
+        await action();
         ok = true;
+        break;
       } catch (_) {}
     }
 
-    if (!mounted) return;
-
-    setState(() {
-      _logs.insert(
-        0,
-        _LogIrrigation(
-          texte: "Aujourd'hui, ${_formatHeureNow()} - Irrigué pendant 15 min",
-          succes: ok,
-        ),
+    try {
+      await _ajouterHistoriqueFirebase(
+        zone,
+        dureeMinutes: dureeMinutes,
+        humiditeApres: nouvelleHumidite,
       );
-      _enCours = false;
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur Firebase : $e')),
+        );
+      }
+    }
+
+    if (!mounted) return;
+    setState(() => _enCours = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           ok
-              ? "Irrigation exécutée sur '${zone.nom}'"
-              : "Action d'irrigation envoyée pour '${zone.nom}'",
+              ? "Irrigation lancée et enregistrée sur '${zone.nom}'"
+              : "Irrigation enregistrée dans l'historique de '${zone.nom}'",
         ),
       ),
     );
@@ -201,7 +275,6 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
         children: [
-          // Carte principale real mn ZonesProvider
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
@@ -305,8 +378,6 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 16),
-
-          // Bouton Démarrer l'irrigation real
           SizedBox(
             width: double.infinity,
             height: 54,
@@ -347,8 +418,6 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 14),
-
-          // Irrigation automatique + seuil real
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             decoration: BoxDecoration(
@@ -389,8 +458,6 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Planification de l'irrigation
           const Text(
             "Planification de l'irrigation",
             style: TextStyle(
@@ -467,66 +534,112 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 20),
-
-          // Historique des irrigations real (yetzad fih kol ma ta3mel irrigation)
-          const Text(
-            'Historique des irrigations',
-            style: TextStyle(
-              fontSize: 18.5,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF1A221B),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Historique des irrigations',
+                style: TextStyle(
+                  fontSize: 18.5,
+                  fontWeight: FontWeight.w500,
+                  color: Color(0xFF1A221B),
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _effacerHistoriqueFirebase(zone),
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text('Effacer'),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          if (_logs.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F8F2),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: const Text(
-                'Aucune irrigation enregistrée pour cette session.',
-                style: TextStyle(fontSize: 14.5, color: Color(0xFF4B5563)),
-              ),
-            )
-          else
-            ..._logs.map(
-                  (log) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
+          const SizedBox(height: 6),
+          StreamBuilder<QuerySnapshot>(
+            stream: _historiqueCollection(zone)
+                .orderBy('createdAt', descending: true)
+                .limit(20)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: CircularProgressIndicator(),
                   ),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Container(
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF3F8F2),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        log.succes ? Icons.check_circle : Icons.info_outline,
-                        size: 18,
-                        color: log.succes
-                            ? const Color(0xFF47883A)
-                            : const Color(0xFF5A6B5C),
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          log.texte,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Color(0xFF1F2820),
-                          ),
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    'Erreur Firestore : ${snapshot.error}',
+                    style: const TextStyle(fontSize: 14, color: Colors.red),
                   ),
-                ),
-              ),
-            ),
+                );
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+              if (docs.isEmpty) {
+                return Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF3F8F2),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Text(
+                    'Aucune irrigation enregistrée dans Firebase.',
+                    style: TextStyle(fontSize: 14.5, color: Color(0xFF4B5563)),
+                  ),
+                );
+              }
+
+              return Column(
+                children: docs.map((doc) {
+                  final rawData = doc.data();
+                  final data = rawData is Map<String, dynamic>
+                      ? rawData
+                      : <String, dynamic>{};
+                  final texte = _formatEntreeHistorique(data);
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3F8F2),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.check_circle,
+                            size: 18,
+                            color: Color(0xFF47883A),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              texte,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: Color(0xFF1F2820),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -551,10 +664,4 @@ class _BadgeInfo extends StatelessWidget {
       ),
     );
   }
-}
-
-class _LogIrrigation {
-  final String texte;
-  final bool succes;
-  const _LogIrrigation({required this.texte, required this.succes});
 }
