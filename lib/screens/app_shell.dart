@@ -1,8 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
+import 'package:agrismart/screens/accueil_page.dart';
+import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/profil_page.dart';
 import 'package:agrismart/screens/statistiques_page.dart';
 import 'package:agrismart/screens/zones_page.dart';
@@ -16,6 +17,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _onglet = 0;
+  bool _voirNotifications = false;
 
   Future<void> _deconnecter() async {
     try {
@@ -31,16 +33,40 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  void _allerVersOnglet(int index) {
+    setState(() {
+      _voirNotifications = false;
+      _onglet = index;
+    });
+  }
+
+  void _ouvrirNotifications() {
+    setState(() {
+      _voirNotifications = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final aIrriguer = context.select<ZonesProvider, int>(
           (provider) => provider.nombreAIrriguer,
     );
 
+    final int selectedNavIndex = _voirNotifications ? 0 : _onglet;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('AgriSmart'),
         actions: [
+          IconButton(
+            tooltip: 'Notifications & Alertes',
+            icon: Badge(
+              label: Text('$aIrriguer'),
+              isLabelVisible: aIrriguer > 0,
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: _ouvrirNotifications,
+          ),
           IconButton(
             tooltip: 'Déconnexion',
             icon: const Icon(Icons.logout),
@@ -48,22 +74,33 @@ class _AppShellState extends State<AppShell> {
           ),
         ],
       ),
-      body: IndexedStack(
+      body: _voirNotifications
+          ? NotificationsPage(
+        onAllerZones: () => _allerVersOnglet(1),
+      )
+          : IndexedStack(
         index: _onglet,
-        children: const [
-          ZonesPage(),
-          StatistiquesPage(),
-          ProfilPage(),
+        children: [
+          AccueilPage(
+            onAllerZones: () => _allerVersOnglet(1),
+            onAllerStatistiques: () => _allerVersOnglet(2),
+            onAllerProfil: () => _allerVersOnglet(3),
+            onOuvrirNotifications: _ouvrirNotifications,
+          ),
+          const ZonesPage(),
+          const StatistiquesPage(),
+          const ProfilPage(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _onglet,
-        onDestinationSelected: (index) {
-          setState(() {
-            _onglet = index;
-          });
-        },
+        selectedIndex: selectedNavIndex,
+        onDestinationSelected: _allerVersOnglet,
         destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
           NavigationDestination(
             icon: Badge(
               label: Text('$aIrriguer'),
