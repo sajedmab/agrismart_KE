@@ -33,12 +33,7 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
   bool _initialise = false;
   bool _enCoursEnvoi = false;
   bool _enCoursAction = false;
-
-  final List<String> _questionsRapides = [
-    'Quand irriguer les tomates à Kébili ?',
-    'Quelles parcelles ont besoin d\'eau ?',
-    'Conseil météo et arrosage aujourd\'hui',
-  ];
+  int _compteurReponses = 0;
 
   String get _cleApi {
     if (widget.apiKey != null && widget.apiKey!.trim().isNotEmpty) {
@@ -59,17 +54,18 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
     final zoneCible = _choisirZoneCible(zones);
     final ville = _extraireVille(meteoProvider);
 
-    final questionInitiale =
-        'Quand irriguer ${zoneCible != null ? 'les ${zoneCible.culture.toLowerCase()}' : 'les tomates'} à $ville ?';
+    final questionOuverture = zoneCible != null
+        ? 'État d\'humidité et irrigation pour ${zoneCible.nom} (${zoneCible.culture}) à $ville ?'
+        : 'État général des parcelles à $ville ?';
 
     _messages.add(
       _MessageChat(
         estUtilisateur: true,
-        texte: questionInitiale,
+        texte: questionOuverture,
       ),
     );
     _demanderReponseIa(
-      question: questionInitiale,
+      question: questionOuverture,
       zones: zones,
       meteoProvider: meteoProvider,
       zoneCible: zoneCible,
@@ -84,6 +80,16 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
     super.dispose();
   }
 
+  List<String> _questionsDynamiques(List<Zone> zones, String ville) {
+    final List<String> suggestions = [];
+    for (final z in zones.take(2)) {
+      suggestions.add('Quand irriguer ${z.nom} (${z.culture}) ?');
+    }
+    suggestions.add('Parcelles en alerte à $ville');
+    suggestions.add('Conseil météo aujourd\'hui');
+    return suggestions;
+  }
+
   List<Zone> _extraireZones(ZonesProvider provider) {
     final dynamic dyn = provider;
     try {
@@ -93,7 +99,24 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
     return const [];
   }
 
-  Zone? _choisirZoneCible(List<Zone> zones) {
+  Zone? _trouverZoneMentionnee(String question, List<Zone> zones) {
+    final q = question.toLowerCase();
+    for (final z in zones) {
+      if (z.nom.isNotEmpty && q.contains(z.nom.toLowerCase())) {
+        return z;
+      }
+      if (z.culture.isNotEmpty && q.contains(z.culture.toLowerCase())) {
+        return z;
+      }
+    }
+    return null;
+  }
+
+  Zone? _choisirZoneCible(List<Zone> zones, {String? question}) {
+    if (question != null) {
+      final mentionnee = _trouverZoneMentionnee(question, zones);
+      if (mentionnee != null) return mentionnee;
+    }
     if (widget.zoneInitiale != null) {
       for (final z in zones) {
         if (z.nom == widget.zoneInitiale!.nom) return z;
@@ -217,7 +240,8 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
 
     return '''
 Tu es l'assistant agricole intelligent de l'application AgriSmart.
-Réponds en français clair, concis et pratique pour un agriculteur.
+Réponds directement à la question précise de l'utilisateur en français clair et varié.
+Ne répète pas mot pour mot les réponses précédentes.
 Données météo actuelles :
 - Ville : $ville
 - Température : $temp
@@ -232,12 +256,15 @@ $lignesZones
     required String question,
     required List<Zone> zones,
     required MeteoProvider meteoProvider,
+    required Zone? zoneCible,
   }) async {
     final apiKey = _cleApi;
     if (apiKey.isEmpty) {
       return _reponseSecours(
+        question: question,
         zones: zones,
         meteoProvider: meteoProvider,
+        zoneCible: zoneCible,
       );
     }
 
@@ -263,7 +290,7 @@ $lignesZones
         'parts': [
           {
             'text':
-            'Compris. J\'analyserai vos parcelles et la météo pour vous donner des recommandations d\'irrigation précises.',
+            'Compris. Je répondrai de façon ciblée selon la question et les parcelles sélectionnées.',
           },
         ],
       },
@@ -291,7 +318,7 @@ $lignesZones
         body: jsonEncode({
           'contents': contents,
           'generationConfig': {
-            'temperature': 0.4,
+            'temperature': 0.7,
             'maxOutputTokens': 500,
           },
         }),
@@ -322,33 +349,66 @@ $lignesZones
     } catch (_) {}
 
     return _reponseSecours(
+      question: question,
       zones: zones,
       meteoProvider: meteoProvider,
+      zoneCible: zoneCible,
     );
   }
 
   String _reponseSecours({
+    required String question,
     required List<Zone> zones,
     required MeteoProvider meteoProvider,
+    required Zone? zoneCible,
   }) {
     final ville = _extraireVille(meteoProvider);
     final temp = _extraireTemperature(meteoProvider);
     final condition = _extraireConditionMeteo(meteoProvider);
+    final q = question.toLowerCase();
+    _compteurReponses++;
 
     if (zones.isEmpty) {
-      return "À $ville${temp != null ? ' ($temp, $condition)' : ''}, aucune parcelle n'est enregistrée.";
+      return "À $ville${temp != null ? ' ($temp, $condition)' : ''}, aucune parcelle n'est encore enregistrée.";
     }
 
-    final zone = _choisirZoneCible(zones) ?? zones.first;
+    if (q.contains('météo') || q.contains('meteo') || q.contains('temp')) {
+      return "Météo actuelle à $ville : ${temp ?? 'température non relevée'}, conditions $condition.\n"
+          "Surveillez l'évaporation aux heures chaudes et privilégiez l'arrosage matinal ou en fin de journée.";
+    }
+
+    if (q.contains('alerte') ||
+        q.contains('besoin') ||
+        q.contains('quelles') ||
+        q.contains('toutes')) {
+      final enAlerte = zones.where((z) => z.besoinIrrigation).toList();
+      if (enAlerte.isEmpty) {
+        return "Toutes les ${zones.length} parcelles suivies à $ville ont une humidité au-dessus de leur seuil.";
+      }
+      final liste = enAlerte
+          .map(
+            (z) =>
+        "• ${z.nom} (${z.culture}) : ${z.humidite.toStringAsFixed(1)}% / seuil ${z.seuil.toStringAsFixed(1)}%",
+      )
+          .join('\n');
+      return "Parcelles nécessitant de l'eau (${enAlerte.length}/${zones.length}) :\n$liste";
+    }
+
+    final zone = zoneCible ?? zones.first;
     final humStr = zone.humidite.toStringAsFixed(1);
     final seuilStr = zone.seuil.toStringAsFixed(1);
+    final ecart = (zone.seuil - zone.humidite).abs().toStringAsFixed(1);
 
     if (zone.humidite < zone.seuil) {
-      return "D'après les données de la ${zone.nom} (${zone.culture}), l'humidité est actuellement à $humStr%, ce qui est inférieur au seuil recommandé de $seuilStr%.\n\n"
-          "Il est conseillé d'irriguer dès maintenant à $ville${temp != null ? ' ($temp, $condition)' : ''} pour éviter un stress hydrique, idéalement en fin de journée.";
+      final variantes = [
+        "Pour ${zone.nom} (${zone.culture}), l'humidité est à $humStr% (soit $ecart% sous le seuil de $seuilStr%). Une irrigation est recommandée à $ville.",
+        "Analyse ${zone.nom} (${zone.culture}) : humidité mesurée à $humStr% contre un seuil de $seuilStr%. Lancez l'arrosage dès que possible${temp != null ? ' avec $temp à $ville' : ''}.",
+        "${zone.nom} affiche $humStr% d'humidité pour un seuil cible de $seuilStr% ($condition à $ville). L'irrigation aidera à rétablir l'équilibre hydrique.",
+      ];
+      return variantes[(_compteurReponses - 1) % variantes.length];
     }
 
-    return "D'après les données de la ${zone.nom} (${zone.culture}), l'humidité est à $humStr% (seuil $seuilStr%) à $ville${temp != null ? ' ($temp, $condition)' : ''}. Aucune irrigation urgente n'est nécessaire.";
+    return "${zone.nom} (${zone.culture}) est à $humStr% d'humidité (seuil : $seuilStr%) à $ville${temp != null ? ', $temp' : ''}. L'état hydrique est correct pour le moment.";
   }
 
   Future<void> _demanderReponseIa({
@@ -372,6 +432,7 @@ $lignesZones
       question: question,
       zones: zones,
       meteoProvider: meteoProvider,
+      zoneCible: zoneCible,
     );
 
     if (!mounted) return;
@@ -482,7 +543,7 @@ $lignesZones
     final zonesProvider = context.read<ZonesProvider>();
     final meteoProvider = context.read<MeteoProvider>();
     final zones = _extraireZones(zonesProvider);
-    final zoneCible = _choisirZoneCible(zones);
+    final zoneCible = _choisirZoneCible(zones, question: texte);
 
     _demanderReponseIa(
       question: texte,
@@ -514,8 +575,12 @@ $lignesZones
   }
 
   void _naviguerBas(int index) {
+    if (index == 0) {
+      Navigator.popUntil(context, (route) => route.isFirst);
+      return;
+    }
     if (widget.onSelectNavIndex != null) {
-      widget.onSelectNavIndex!(index);
+      widget.onSelectNavIndex!(index - 1);
     }
     Navigator.popUntil(context, (route) => route.isFirst);
   }
@@ -523,10 +588,12 @@ $lignesZones
   @override
   Widget build(BuildContext context) {
     final zonesProvider = context.watch<ZonesProvider>();
-    context.watch<MeteoProvider>();
+    final meteoProvider = context.watch<MeteoProvider>();
 
     final zones = _extraireZones(zonesProvider);
     final aIrriguer = _lireNombreAIrriguer(zonesProvider, zones);
+    final ville = _extraireVille(meteoProvider);
+    final questions = _questionsDynamiques(zones, ville);
 
     return Scaffold(
       backgroundColor: const Color(0xFFE7EFE6),
@@ -540,18 +607,19 @@ $lignesZones
         ),
         actions: [
           IconButton(
-            tooltip: 'Scanner',
-            icon: const Icon(Icons.qr_code_2, color: Color(0xFF1A221B)),
+            tooltip: 'Effacer discussion',
+            icon: const Icon(Icons.refresh, color: Color(0xFF1A221B)),
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Scanner QR / parcelle')),
-              );
+              setState(() {
+                _messages.clear();
+                _compteurReponses = 0;
+              });
             },
           ),
           IconButton(
-            tooltip: 'Quitter',
-            icon: const Icon(Icons.logout, color: Color(0xFF1A221B)),
-            onPressed: () => Navigator.pop(context),
+            tooltip: 'Accueil',
+            icon: const Icon(Icons.home_outlined, color: Color(0xFF1A221B)),
+            onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
           ),
         ],
       ),
@@ -602,10 +670,10 @@ $lignesZones
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               scrollDirection: Axis.horizontal,
-              itemCount: _questionsRapides.length,
+              itemCount: questions.length,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, i) {
-                final q = _questionsRapides[i];
+                final q = questions[i];
                 return ActionChip(
                   backgroundColor: const Color(0xFFF3F8F2),
                   side: const BorderSide(color: Color(0xFFC8D7C6)),
@@ -827,6 +895,11 @@ $lignesZones
         selectedIndex: 0,
         onDestinationSelected: _naviguerBas,
         destinations: [
+          const NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Accueil',
+          ),
           NavigationDestination(
             icon: Badge(
               label: Text('$aIrriguer'),
