@@ -178,10 +178,9 @@ class AccueilPageState extends State<AccueilPage> {
   String _villeMeteo(MeteoProvider meteoProvider) {
     final dynamic m = meteoProvider;
     final dynamic data = _extractMeteoData(meteoProvider);
-    final ville =
-        _tryProperty(data, 'ville') ??
-            _tryProperty(data, 'city') ??
-            _tryProperty(m, 'ville');
+    final ville = _tryProperty(data, 'ville') ??
+        _tryProperty(data, 'city') ??
+        _tryProperty(m, 'ville');
     if (ville is String && ville.trim().isNotEmpty) {
       return ville.trim();
     }
@@ -191,11 +190,10 @@ class AccueilPageState extends State<AccueilPage> {
   String _temperatureMeteo(MeteoProvider meteoProvider) {
     final dynamic m = meteoProvider;
     final dynamic data = _extractMeteoData(meteoProvider);
-    final temp =
-        _tryProperty(data, 'temperature') ??
-            _tryProperty(data, 'temp') ??
-            _tryProperty(m, 'temperature') ??
-            _tryProperty(m, 'temp');
+    final temp = _tryProperty(data, 'temperature') ??
+        _tryProperty(data, 'temp') ??
+        _tryProperty(m, 'temperature') ??
+        _tryProperty(m, 'temp');
 
     if (temp is num) {
       return '${temp.round()}°C';
@@ -229,7 +227,8 @@ class AccueilPageState extends State<AccueilPage> {
       MaterialPageRoute(
         builder: (_) => ZoneFormPage(
           zone: zone,
-          nomsExistants: zones.where((z) => z != zone).map((z) => z.nom).toList(),
+          nomsExistants:
+          zones.where((z) => z != zone).map((z) => z.nom).toList(),
         ),
       ),
     );
@@ -293,12 +292,12 @@ class AccueilPageState extends State<AccueilPage> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.eco, color: Color(0xFF4CAF50), size: 32),
+                      Icon(Icons.eco, color: Color(0xFF4CAF50), size: 30),
                       SizedBox(width: 6),
                       Text(
                         'AgriSmart',
                         style: TextStyle(
-                          fontSize: 23,
+                          fontSize: 22,
                           fontWeight: FontWeight.w500,
                           color: Color(0xFF3E7B3A),
                         ),
@@ -313,8 +312,8 @@ class AccueilPageState extends State<AccueilPage> {
                           color: Color(0xFFE88D2A),
                           size: 24,
                         ),
-                        onPressed: () =>
-                            _afficherMessage('Notifications & Alertes'),
+                        onPressed: widget.onAllerZones ??
+                                () => _afficherMessage('Notifications & Alertes'),
                       ),
                       IconButton(
                         icon: const Icon(
@@ -331,15 +330,8 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 8),
 
-              // 2. Date réelle + Nom utilisateur + Zone
-              Container(
-                width: double.infinity,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
+              // 2. Carte Date réelle + Nom utilisateur + Zone
+              _CarteBlanche(
                 child: Column(
                   children: [
                     Row(
@@ -348,7 +340,7 @@ class AccueilPageState extends State<AccueilPage> {
                         const Text(
                           "Aujourd'hui",
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF1F2937),
                           ),
@@ -356,13 +348,13 @@ class AccueilPageState extends State<AccueilPage> {
                         Text(
                           _dateFormatee(),
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 13,
                             color: Color(0xFF374151),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 8),
                     Text(
                       nomUser,
                       style: const TextStyle(
@@ -375,7 +367,7 @@ class AccueilPageState extends State<AccueilPage> {
                     Text(
                       '- $zonePrincipale',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         color: Color(0xFF4B5563),
                       ),
                     ),
@@ -384,16 +376,11 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 10),
 
-              // 3. Météo réelle + Alerte
+              // 3. Deux cartes côte à côte: Météo réelle + Alerte
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                    child: _CarteBlanche(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -402,7 +389,7 @@ class AccueilPageState extends State<AccueilPage> {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 13,
                               fontWeight: FontWeight.w500,
                               color: Color(0xFF1F2937),
                             ),
@@ -414,7 +401,7 @@ class AccueilPageState extends State<AccueilPage> {
                               Text(
                                 temperature,
                                 style: const TextStyle(
-                                  fontSize: 28,
+                                  fontSize: 26,
                                   fontWeight: FontWeight.w500,
                                   color: Color(0xFF111827),
                                 ),
@@ -422,7 +409,7 @@ class AccueilPageState extends State<AccueilPage> {
                               Icon(
                                 _iconeMeteo(meteoProvider),
                                 color: const Color(0xFFEAB308),
-                                size: 32,
+                                size: 30,
                               ),
                             ],
                           ),
@@ -432,45 +419,37 @@ class AccueilPageState extends State<AccueilPage> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(10),
+                    child: _CarteBlanche(
                       onTap: widget.onAllerZones ??
                               () {
                             if (zones.isNotEmpty) {
                               _ouvrirDetail(zones, zones.first);
                             }
                           },
-                      child: Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Alerte',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF1F2937),
-                              ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Alerte',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF1F2937),
                             ),
-                            const SizedBox(height: 6),
-                            Text(
-                              zonesAIrriguer == 1
-                                  ? '1 parcelle à\nirriguer'
-                                  : '$zonesAIrriguer parcelles à\nirriguer',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Color(0xFF111827),
-                                height: 1.2,
-                              ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            zonesAIrriguer == 1
+                                ? '1 parcelle à\nirriguer'
+                                : '$zonesAIrriguer parcelles à\nirriguer',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF111827),
+                              height: 1.2,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -478,92 +457,63 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 12),
 
-              // 4. Grille 2x3
+              // 4. Grille 2x4 (8 cartes b'nafs el style w asghar fl hajm)
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 crossAxisCount: 2,
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
-                childAspectRatio: 1.55,
+                childAspectRatio: 1.52,
                 children: [
                   _BoutonVert(
-                    icon: Icons.smart_toy_outlined,
+                    icon: Icons.smart_toy,
                     label: 'Assistant IA',
                     onTap: () => _afficherMessage('Assistant IA'),
                   ),
                   _BoutonVert(
-                    icon: Icons.center_focus_weak,
+                    icon: Icons.qr_code_scanner,
                     label: 'Scanner Étiquette',
                     onTap: () => _afficherMessage('Scanner Étiquette'),
                   ),
                   _BoutonVert(
-                    icon: Icons.plumbing_outlined,
+                    icon: Icons.build,
                     label: 'Équipements',
                     onTap: () => _afficherMessage('Équipements'),
                   ),
                   _BoutonVert(
-                    icon: Icons.calendar_today_outlined,
+                    icon: Icons.calendar_today,
                     label: 'Calendrier',
                     onTap: () => _afficherMessage('Calendrier'),
                   ),
                   _BoutonVert(
-                    icon: Icons.menu_book_outlined,
+                    icon: Icons.menu_book,
                     label: "Journal d'activités",
                     onTap: () => _afficherMessage("Journal d'activités"),
                   ),
                   _BoutonVert(
-                    icon: Icons.description_outlined,
+                    icon: Icons.description,
                     label: 'Guides & Rapports',
                     onTap: widget.onAllerStatistiques ??
                             () => _afficherMessage('Guides & Rapports'),
                   ),
+                  _BoutonVert(
+                    icon: Icons.shopping_basket,
+                    label: 'Tâches à venir',
+                    subtitle: 'Récolte Tomates (5j)',
+                    onTap: () => _afficherMessage('Tâches à venir'),
+                  ),
+                  _BoutonVert(
+                    icon: Icons.notifications,
+                    label: 'Notifications & Alertes',
+                    subtitle: zonesAIrriguer > 0
+                        ? '$zonesAIrriguer parcelle(s) à irriguer'
+                        : 'Aucune alerte',
+                    badgeCount: zonesAIrriguer > 0 ? zonesAIrriguer : null,
+                    onTap: widget.onAllerZones ??
+                            () => _afficherMessage('Notifications & Alertes'),
+                  ),
                 ],
-              ),
-              const SizedBox(height: 12),
-
-              // 5. Tâches à venir
-              Container(
-                width: double.infinity,
-                padding:
-                const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tâches à venir',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F2937),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.shopping_basket_outlined,
-                          color: Color(0xFFC2410C),
-                          size: 22,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Récolte Tomates - dans 5 jours',
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
               ),
             ],
           ),
@@ -584,45 +534,116 @@ class AccueilPageState extends State<AccueilPage> {
   }
 }
 
+class _CarteBlanche extends StatelessWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+
+  const _CarteBlanche({
+    required this.child,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
 class _BoutonVert extends StatelessWidget {
   final IconData icon;
   final String label;
+  final String? subtitle;
+  final int? badgeCount;
   final VoidCallback onTap;
 
   const _BoutonVert({
     required this.icon,
     required this.label,
     required this.onTap,
+    this.subtitle,
+    this.badgeCount,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
       color: const Color(0xFF56A832),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: Colors.white, size: 36),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
+        child: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(icon, color: Colors.white, size: 30),
+                    const SizedBox(height: 6),
+                    Text(
+                      label,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle!,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+            if (badgeCount != null)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: const TextStyle(
+                      color: Color(0xFF3E7B3A),
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
