@@ -290,11 +290,15 @@ class AccueilPageState extends State<AccueilPage> {
         ? rawAlertes
         : zones.where((z) => z.humidite < 35.0).length;
 
+    final Zone? zoneCible = zones.isNotEmpty ? zones.first : null;
     final String nomUser = _nomUtilisateur(authProvider);
-    final String zonePrincipale =
-    zones.isNotEmpty ? zones.first.nom : 'Parcelle Nord';
+    final String zonePrincipale = zoneCible?.nom ?? 'Parcelle Nord';
     final String ville = _villeMeteo(meteoProvider);
     final String temperature = _temperatureMeteo(meteoProvider);
+
+    final String detailSubtitle = zoneCible != null
+        ? '${zoneCible.nom} · ${zoneCible.humidite.toStringAsFixed(0)}%'
+        : 'Parcelle Nord · Détails';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F0),
@@ -439,8 +443,8 @@ class AccueilPageState extends State<AccueilPage> {
                     child: _CarteBlanche(
                       onTap: widget.onAllerZones ??
                               () {
-                            if (zones.isNotEmpty) {
-                              _ouvrirDetail(zones, zones.first);
+                            if (zoneCible != null) {
+                              _ouvrirDetail(zones, zoneCible);
                             }
                           },
                       child: Column(
@@ -474,7 +478,7 @@ class AccueilPageState extends State<AccueilPage> {
               ),
               const SizedBox(height: 12),
 
-              // 4. Grille 2x4 (8 cartes b'nafs el style w asghar fl hajm)
+              // 4. Grille des cartes vertes (تتضمن البطاقة التاسعة: Détails Parcelle)
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -528,6 +532,20 @@ class AccueilPageState extends State<AccueilPage> {
                         : 'Aucune alerte',
                     badgeCount: zonesAIrriguer > 0 ? zonesAIrriguer : null,
                     onTap: _ouvrirNotifications,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.water_drop,
+                    label: 'Détails Parcelle',
+                    subtitle: detailSubtitle,
+                    onTap: () {
+                      if (zoneCible != null) {
+                        _ouvrirDetail(zones, zoneCible);
+                      } else if (widget.onAllerZones != null) {
+                        widget.onAllerZones!();
+                      } else {
+                        _afficherMessage('Aucune parcelle disponible');
+                      }
+                    },
                   ),
                 ],
               ),
