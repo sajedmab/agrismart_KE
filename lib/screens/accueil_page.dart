@@ -12,12 +12,14 @@ class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
   final VoidCallback? onAllerStatistiques;
   final VoidCallback? onAllerProfil;
+  final VoidCallback? onOuvrirNotifications;
 
   const AccueilPage({
     super.key,
     this.onAllerZones,
     this.onAllerStatistiques,
     this.onAllerProfil,
+    this.onOuvrirNotifications,
   });
 
   @override
@@ -223,6 +225,10 @@ class AccueilPageState extends State<AccueilPage> {
   }
 
   Future<void> _ouvrirNotifications() async {
+    if (widget.onOuvrirNotifications != null) {
+      widget.onOuvrirNotifications!();
+      return;
+    }
     await Navigator.push(
       context,
       MaterialPageRoute(
