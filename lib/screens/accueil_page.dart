@@ -12,7 +12,8 @@ import 'package:agrismart/screens/zone_form_page.dart';
 import 'package:agrismart/screens/ScannerEtiquettePage.dart';
 import 'package:agrismart/screens/diagnostic_plante_page.dart';
 import 'package:agrismart/screens/taches_a_venir_page.dart';
-import 'package:agrismart/screens/equipements_page.dart'; // تمت إضافة استيراد صفحة الأجهزة هنا
+import 'package:agrismart/screens/equipements_page.dart';
+import 'package:agrismart/screens/journal_activites_page.dart'; // تمت إضافة استيراد صفحة Journal d'activités هنا
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -288,6 +289,16 @@ class AccueilPageState extends State<AccueilPage> {
             }
           },
         ),
+      ),
+    );
+  }
+
+  // ربط زر Journal d'activités بصفحة الأنشطة الحقيقية
+  Future<void> _ouvrirJournalActivites() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const JournalActivitesPage(),
       ),
     );
   }
@@ -591,7 +602,7 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.build,
                     label: 'Équipements',
-                    onTap: _ouvrirEquipements, // تم ربط زر Équipements بالصفحة الجديدة هنا
+                    onTap: _ouvrirEquipements,
                   ),
                   _BoutonVert(
                     icon: Icons.calendar_today,
@@ -601,7 +612,7 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.menu_book,
                     label: "Journal d'activités",
-                    onTap: () => _afficherMessage("Journal d'activités"),
+                    onTap: _ouvrirJournalActivites, // تم ربط زر Journal d'activités بصفحته الحقيقية
                   ),
                   _BoutonVert(
                     icon: Icons.description,
