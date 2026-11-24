@@ -17,10 +17,54 @@ class ZoneCard extends StatelessWidget {
     this.onLongPress,
   });
 
+  Color _couleurStatutHumidite(double hum) {
+    if (hum < 30) {
+      return const Color(0xFFD9534F); // Rouge (< 30)
+    } else if (hum < 50) {
+      return const Color(0xFFE88D2A); // Orange (30..50)
+    } else {
+      return const Color(0xFF2E7D32); // Vert (50+)
+    }
+  }
+
+  Color _couleurClairStatut(double hum) {
+    if (hum < 30) {
+      return const Color(0xFFFFEFEA);
+    } else if (hum < 50) {
+      return const Color(0xFFFFF4E5);
+    } else {
+      return const Color(0xFFEAF8E6);
+    }
+  }
+
+  Color _couleurBarre(double hum) {
+    if (hum < 30) {
+      return const Color(0xFFFF6B6B);
+    } else if (hum < 50) {
+      return const Color(0xFFFFB74D);
+    } else {
+      return const Color(0xFF9BE888);
+    }
+  }
+
+  String _labelNiveau(double hum) {
+    if (hum < 30) {
+      return 'Critique (< 30%)';
+    } else if (hum < 50) {
+      return 'Modérée (30-50%)';
+    } else {
+      return 'Optimale (50%+)';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool besoinEau = zone.humidite <= zone.seuil;
     final double ratio = (zone.humidite / 100.0).clamp(0.0, 1.0);
+
+    final Color couleurPrincipale = _couleurStatutHumidite(zone.humidite);
+    final Color couleurBadgeBg = _couleurClairStatut(zone.humidite);
+    final Color couleurBarre = _couleurBarre(zone.humidite);
 
     final List<Color> gradientVert = besoinEau
         ? const [Color(0xFF296633), Color(0xFF3F8637)]
@@ -36,10 +80,8 @@ class ZoneCard extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: besoinEau
-              ? const Color(0xFFFFC5A1)
-              : const Color(0xFF9CD68A),
-          width: 1.2,
+          color: couleurBarre,
+          width: 1.5,
         ),
         boxShadow: [
           BoxShadow(
@@ -111,54 +153,69 @@ class ZoneCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         child: LinearProgressIndicator(
                           value: ratio,
-                          minHeight: 7,
+                          minHeight: 8,
                           backgroundColor: Colors.white.withValues(alpha: 0.25),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            besoinEau
-                                ? const Color(0xFFFFB74D)
-                                : const Color(0xFFD4FFBE),
-                          ),
+                          valueColor:
+                          AlwaysStoppedAnimation<Color>(couleurBarre),
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: besoinEau
-                              ? const Color(0xFFFFEFEA)
-                              : const Color(0xFFEAF8E6),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              besoinEau
-                                  ? Icons.water_drop_outlined
-                                  : Icons.check_circle,
-                              size: 15,
-                              color: besoinEau
-                                  ? const Color(0xFFC93B2B)
-                                  : const Color(0xFF256029),
+                      const SizedBox(height: 9),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 6,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
                             ),
-                            const SizedBox(width: 5),
-                            Text(
-                              besoinEau
-                                  ? 'À irriguer'
-                                  : 'Humidité suffisante',
-                              style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: besoinEau
-                                    ? const Color(0xFFC93B2B)
-                                    : const Color(0xFF256029),
+                            decoration: BoxDecoration(
+                              color: couleurBadgeBg,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  zone.humidite < 30
+                                      ? Icons.warning_amber_rounded
+                                      : zone.humidite < 50
+                                      ? Icons.water_drop_outlined
+                                      : Icons.check_circle,
+                                  size: 15,
+                                  color: couleurPrincipale,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  _labelNiveau(zone.humidite),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: couleurPrincipale,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              besoinEau ? 'À irriguer' : 'Humidité suffisante',
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
                               ),
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
