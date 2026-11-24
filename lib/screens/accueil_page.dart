@@ -11,7 +11,8 @@ import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
 import 'package:agrismart/screens/ScannerEtiquettePage.dart';
 import 'package:agrismart/screens/diagnostic_plante_page.dart';
-import 'package:agrismart/screens/taches_a_venir_page.dart'; // تم استيراد صفحة المهام الجديدة
+import 'package:agrismart/screens/taches_a_venir_page.dart';
+import 'package:agrismart/screens/equipements_page.dart'; // تمت إضافة استيراد صفحة الأجهزة هنا
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -249,19 +250,40 @@ class AccueilPageState extends State<AccueilPage> {
     );
   }
 
-  // تم ربط زر "Tâches à venir" بفتح صفحة التقويم والمهام الجديدة
+  // ربط زر Tâches à venir بالصفحة الخاصة بها
   Future<void> _ouvrirTachesAVenir() async {
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => TachesAVenirPage(
           onNavigate: (index) {
-            Navigator.pop(context); // العودة للصفحة الرئيسية وتوجيه الـ Navbar حسب الاختيار
-            if (index == 1 && widget.onAllerZones != null) {
+            Navigator.pop(context);
+            if (index == 0 && widget.onAllerZones != null) {
               widget.onAllerZones!();
-            } else if (index == 2 && widget.onAllerStatistiques != null) {
+            } else if (index == 1 && widget.onAllerStatistiques != null) {
               widget.onAllerStatistiques!();
-            } else if (index == 3 && widget.onAllerProfil != null) {
+            } else if (index == 2 && widget.onAllerProfil != null) {
+              widget.onAllerProfil!();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  // ربط زر Équipements بصفحة الأجهزة الجديدة
+  Future<void> _ouvrirEquipements() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EquipementsPage(
+          onNavigate: (index) {
+            Navigator.pop(context);
+            if (index == 0 && widget.onAllerZones != null) {
+              widget.onAllerZones!();
+            } else if (index == 1 && widget.onAllerStatistiques != null) {
+              widget.onAllerStatistiques!();
+            } else if (index == 2 && widget.onAllerProfil != null) {
               widget.onAllerProfil!();
             }
           },
@@ -569,7 +591,7 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.build,
                     label: 'Équipements',
-                    onTap: () => _afficherMessage('Équipements'),
+                    onTap: _ouvrirEquipements, // تم ربط زر Équipements بالصفحة الجديدة هنا
                   ),
                   _BoutonVert(
                     icon: Icons.calendar_today,
@@ -590,7 +612,7 @@ class AccueilPageState extends State<AccueilPage> {
                     icon: Icons.shopping_basket,
                     label: 'Tâches à venir',
                     subtitle: 'Récolte Tomates (5j)',
-                    onTap: _ouvrirTachesAVenir, // تم ربط الزر هنا بفتح الصفحة المخصصة
+                    onTap: _ouvrirTachesAVenir,
                   ),
                   _BoutonVert(
                     icon: Icons.notifications,
