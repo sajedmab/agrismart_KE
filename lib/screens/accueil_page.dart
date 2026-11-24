@@ -11,6 +11,7 @@ import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
 import 'package:agrismart/screens/ScannerEtiquettePage.dart';
 import 'package:agrismart/screens/diagnostic_plante_page.dart';
+import 'package:agrismart/screens/taches_a_venir_page.dart'; // تم استيراد صفحة المهام الجديدة
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -244,6 +245,27 @@ class AccueilPageState extends State<AccueilPage> {
       context,
       MaterialPageRoute(
         builder: (_) => const ExportRapportsPage(),
+      ),
+    );
+  }
+
+  // تم ربط زر "Tâches à venir" بفتح صفحة التقويم والمهام الجديدة
+  Future<void> _ouvrirTachesAVenir() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TachesAVenirPage(
+          onNavigate: (index) {
+            Navigator.pop(context); // العودة للصفحة الرئيسية وتوجيه الـ Navbar حسب الاختيار
+            if (index == 1 && widget.onAllerZones != null) {
+              widget.onAllerZones!();
+            } else if (index == 2 && widget.onAllerStatistiques != null) {
+              widget.onAllerStatistiques!();
+            } else if (index == 3 && widget.onAllerProfil != null) {
+              widget.onAllerProfil!();
+            }
+          },
+        ),
       ),
     );
   }
@@ -568,7 +590,7 @@ class AccueilPageState extends State<AccueilPage> {
                     icon: Icons.shopping_basket,
                     label: 'Tâches à venir',
                     subtitle: 'Récolte Tomates (5j)',
-                    onTap: () => _afficherMessage('Tâches à venir'),
+                    onTap: _ouvrirTachesAVenir, // تم ربط الزر هنا بفتح الصفحة المخصصة
                   ),
                   _BoutonVert(
                     icon: Icons.notifications,
