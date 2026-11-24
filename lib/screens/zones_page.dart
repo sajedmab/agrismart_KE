@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:agrismart/models/zone.dart';
@@ -12,7 +11,17 @@ class ZonesPage extends StatelessWidget {
 
   void _message(BuildContext context, String texte) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(texte)),
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: const Color(0xFF285226),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+        ),
+        content: Text(
+          texte,
+          style: const TextStyle(color: Colors.white),
+        ),
+      ),
     );
   }
 
@@ -63,16 +72,34 @@ class ZonesPage extends StatelessWidget {
     final confirme = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Supprimer la zone'),
+        backgroundColor: const Color(0xFFF2F7F1),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: const Text(
+          'Supprimer la zone',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF171E18),
+          ),
+        ),
         content: Text(
           'Voulez-vous vraiment supprimer "${zone.nom}" ?',
+          style: const TextStyle(color: Color(0xFF3E4A40)),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Annuler'),
+            child: const Text(
+              'Annuler',
+              style: TextStyle(color: Color(0xFF4A574C)),
+            ),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFC93B2B),
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Supprimer'),
           ),
@@ -101,28 +128,147 @@ class ZonesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final zones = context.watch<ZonesProvider>().zones;
+    final nbAlerte = zones.where((z) => z.besoinIrrigation).length;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('AgriSmart - Zones'),
-      ),
-      body: zones.isEmpty
-          ? const Center(
-        child: Text('Aucune zone enregistrée'),
-      )
-          : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: zones.length,
-        itemBuilder: (context, index) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: _carte(context, zones[index]),
-          );
-        },
+      backgroundColor: const Color(0xFFE7EFE6),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Container(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2D6A32), Color(0xFF478E39)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF2D6A32).withValues(alpha: 0.24),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'AgriSmart - Zones',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${zones.length} parcelle(s) suivie(s)',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFFDDF0DC),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 7,
+                      ),
+                      decoration: BoxDecoration(
+                        color: nbAlerte > 0
+                            ? const Color(0xFFFFEFEA)
+                            : const Color(0xFFE9F7E6),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        nbAlerte > 0 ? '$nbAlerte à irriguer' : 'Tout est OK',
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: nbAlerte > 0
+                              ? const Color(0xFFC93B2B)
+                              : const Color(0xFF256029),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(
+              child: zones.isEmpty
+                  ? Center(
+                child: Container(
+                  margin: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF3E8438), Color(0xFF56A832)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                  ),
+                  child: const Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.eco_outlined,
+                        size: 42,
+                        color: Colors.white,
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Aucune zone enregistrée',
+                        style: TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Appuyez sur + pour ajouter une parcelle.',
+                        style: TextStyle(
+                          fontSize: 13.5,
+                          color: Color(0xFFE7F6E5),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+                  : ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 6, 16, 96),
+                itemCount: zones.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _carte(context, zones[index]),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xFF2D6A32),
+        foregroundColor: Colors.white,
+        elevation: 4,
         onPressed: () => _ajouter(context),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, size: 28),
       ),
     );
   }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:agrismart/models/zone.dart';
-import 'package:agrismart/screens/app_shell.dart';
 import 'package:agrismart/widgets/zone_form.dart';
 
 class ZoneFormPage extends StatelessWidget {
@@ -18,8 +17,6 @@ class ZoneFormPage extends StatelessWidget {
   void _naviguerBas(BuildContext context, int index) {
     if (onSelectNavIndex != null) {
       onSelectNavIndex!(index);
-    } else {
-      appShellKey.currentState?.allerVersOnglet(index);
     }
     Navigator.popUntil(context, (route) => route.isFirst);
   }
@@ -63,7 +60,8 @@ class ZoneFormPage extends StatelessWidget {
             children: [
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF2F7F1),
                   borderRadius: BorderRadius.circular(18),
@@ -85,7 +83,9 @@ class ZoneFormPage extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
-                        estModification ? Icons.edit_location_alt : Icons.add_location_alt,
+                        estModification
+                            ? Icons.edit_location_alt
+                            : Icons.add_location_alt,
                         color: const Color(0xFF3E7B3A),
                         size: 24,
                       ),
