@@ -8,6 +8,7 @@ import 'package:agrismart/screens/assistant_ia_page.dart';
 import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
+import 'package:agrismart/screens/ScannerEtiquettePage.dart';
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -288,6 +289,13 @@ class AccueilPageState extends State<AccueilPage> {
     );
   }
 
+  Future<void> _scannerEtiquette() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ScannerEtiquettePage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -507,7 +515,7 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.qr_code_scanner,
                     label: 'Scanner Étiquette',
-                    onTap: () => _afficherMessage('Scanner Étiquette'),
+                    onTap: _scannerEtiquette,
                   ),
                   _BoutonVert(
                     icon: Icons.build,
@@ -674,7 +682,8 @@ class _BoutonVert extends StatelessWidget {
                 top: 8,
                 right: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
