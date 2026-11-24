@@ -9,6 +9,7 @@ import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
 import 'package:agrismart/screens/ScannerEtiquettePage.dart';
+import 'package:agrismart/screens/diagnostic_plante_page.dart';
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -296,6 +297,17 @@ class AccueilPageState extends State<AccueilPage> {
     );
   }
 
+  Future<void> _diagnosticPlante() async {
+    final resume = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(builder: (_) => const DiagnosticPlantePage()),
+    );
+    if (resume == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Diagnostic enregistré : $resume')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
@@ -516,6 +528,11 @@ class AccueilPageState extends State<AccueilPage> {
                     icon: Icons.qr_code_scanner,
                     label: 'Scanner Étiquette',
                     onTap: _scannerEtiquette,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.local_florist,
+                    label: 'Diagnostic de plante',
+                    onTap: _diagnosticPlante,
                   ),
                   _BoutonVert(
                     icon: Icons.build,
