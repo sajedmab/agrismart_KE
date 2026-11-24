@@ -5,6 +5,7 @@ import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/meteo_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
 import 'package:agrismart/screens/assistant_ia_page.dart';
+import 'package:agrismart/screens/export_rapports_page.dart';
 import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
@@ -234,6 +235,15 @@ class AccueilPageState extends State<AccueilPage> {
         builder: (_) => AssistantIaPage(
           zoneInitiale: zoneCible,
         ),
+      ),
+    );
+  }
+
+  Future<void> _ouvrirRapports() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ExportRapportsPage(),
       ),
     );
   }
@@ -552,8 +562,7 @@ class AccueilPageState extends State<AccueilPage> {
                   _BoutonVert(
                     icon: Icons.description,
                     label: 'Guides & Rapports',
-                    onTap: widget.onAllerStatistiques ??
-                            () => _afficherMessage('Guides & Rapports'),
+                    onTap: _ouvrirRapports,
                   ),
                   _BoutonVert(
                     icon: Icons.shopping_basket,
