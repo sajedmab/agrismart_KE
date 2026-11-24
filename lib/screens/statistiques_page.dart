@@ -12,8 +12,6 @@ class StatistiquesPage extends StatefulWidget {
 }
 
 class _StatistiquesPageState extends State<StatistiquesPage> {
-  int _selectedIndex = 1; // Statistiques est l'index 1 dans la Navbar
-
   void _showAddStatDialog() {
     showDialog(
       context: context,
@@ -60,7 +58,7 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // العنوان الرئيسي للصفحة بدون شريط علوي قديم
+            // العنوان الرئيسي للصفحة
             const Padding(
               padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
               child: Text(
@@ -80,7 +78,7 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
               child: Stack(
                 children: [
                   ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 90),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
                     children: [
                       // --- بطاقة المنحنى البياني الشامل لكل الحقول (Tout Parciel) ---
                       Container(
@@ -260,53 +258,6 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                   ),
                 ],
               ),
-            ),
-          ],
-        ),
-      ),
-
-      // شريط التنقل السفلي (Navbar)
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3F7F2),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-        ),
-        child: NavigationBar(
-          height: 70,
-          backgroundColor: Colors.transparent,
-          indicatorColor: const Color(0xFFD6E6D2),
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() {
-              _selectedIndex = index;
-            });
-            if (widget.onNavigate != null) {
-              widget.onNavigate!(index);
-            }
-          },
-          destinations: [
-            NavigationDestination(
-              icon: Badge(
-                label: Text('${zones.where((z) => z.besoinIrrigation).length}'),
-                backgroundColor: const Color(0xFF962D2D),
-                child: const Icon(Icons.grass_outlined, color: Color(0xFF283D27)),
-              ),
-              selectedIcon: Badge(
-                label: Text('${zones.where((z) => z.besoinIrrigation).length}'),
-                backgroundColor: const Color(0xFF962D2D),
-                child: const Icon(Icons.grass, color: Color(0xFF283D27)),
-              ),
-              label: 'Zones',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.bar_chart_rounded, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.bar_chart, color: Color(0xFF283D27)),
-              label: 'Statistiques',
-            ),
-            const NavigationDestination(
-              icon: Icon(Icons.person_outline, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.person, color: Color(0xFF283D27)),
-              label: 'Profil',
             ),
           ],
         ),
