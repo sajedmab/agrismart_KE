@@ -75,7 +75,7 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
     final zonesProvider = context.watch<ZonesProvider>();
     final zones = zonesProvider.zones;
     final nomParcelle = zones.isNotEmpty ? zones.first.nom : 'Parcelle Nord';
-    final aIrriguer = zonesProvider.nombreAIrriguer;
+    final aIrriguer = zonesProvider.nombreAirriguer;
 
     return Scaffold(
       backgroundColor: const Color(0xFFE3ECE1),

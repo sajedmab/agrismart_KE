@@ -1,9 +1,9 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
+import 'package:agrismart/providers/reglages_provider.dart'; // 1. Import ajouté
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -206,6 +206,11 @@ class _ProfilPageState extends State<ProfilPage> {
           (provider) => provider.nombre,
     );
 
+    // 2. Lecture du thème actuel
+    final themeMode = context.select<ReglagesProvider, ThemeMode>(
+          (r) => r.themeMode,
+    );
+
     final email = utilisateur?.email ?? 'Email non disponible';
     final uid = utilisateur?.uid ?? 'ID non disponible';
 
@@ -332,6 +337,28 @@ class _ProfilPageState extends State<ProfilPage> {
           ),
 
           _sectionTitre('SESSION'),
+
+          // 3. Widgets du sélecteur de thème ajoutés ici
+          const ListTile(
+            leading: Icon(Icons.brightness_6),
+            title: Text('Thème'),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: SegmentedButton<ThemeMode>(
+              segments: const [
+                ButtonSegment(value: ThemeMode.system, label: Text('Système')),
+                ButtonSegment(value: ThemeMode.light, label: Text('Clair')),
+                ButtonSegment(value: ThemeMode.dark, label: Text('Sombre')),
+              ],
+              selected: {themeMode},
+              onSelectionChanged: (choix) {
+                context.read<ReglagesProvider>().changerTheme(choix.first);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // --------------------------------------------
 
           Card(
             elevation: 0,

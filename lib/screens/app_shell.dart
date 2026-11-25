@@ -49,7 +49,7 @@ class _AppShellState extends State<AppShell> {
   @override
   Widget build(BuildContext context) {
     final aIrriguer = context.select<ZonesProvider, int>(
-          (provider) => provider.nombreAIrriguer,
+          (provider) => provider.nombreAirriguer,
     );
 
     final int selectedNavIndex = _voirNotifications ? 0 : _onglet;
