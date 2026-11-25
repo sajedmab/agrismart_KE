@@ -26,7 +26,6 @@ class HarvestCalendarPage extends StatefulWidget {
 class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
   static const Color green = Color(0xFF56A832);
   static const Color darkGreen = Color(0xFF2F6B35);
-  static const Color background = Color(0xFFF1F5F0);
 
   late DateTime _month;
   late DateTime _selectedDay;
@@ -77,7 +76,12 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Ajouter une tâche'),
+          // ✅ Fond de la boîte de dialogue dynamique
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          title: Text(
+            'Ajouter une tâche',
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+          ),
           content: SizedBox(
             width: 360,
             child: Column(
@@ -114,7 +118,12 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                   children: [
                     const Icon(Icons.calendar_month, color: green),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(_dateLabel(date))),
+                    Expanded(
+                      child: Text(
+                        _dateLabel(date),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                      ),
+                    ),
                     TextButton(
                       onPressed: () async {
                         final picked = await showDatePicker(
@@ -172,19 +181,19 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
 
   Color _typeColor(String type) {
     switch (type) {
-      case 'Récolte':
-        return const Color(0xFFE88D2A);
-      case 'Plantation':
-        return const Color(0xFF4C9A50);
-      case 'Irrigation':
-        return const Color(0xFF3296C8);
-      default:
-        return const Color(0xFF8B75B7);
+      case 'Récolte': return const Color(0xFFE88D2A);
+      case 'Plantation': return const Color(0xFF4C9A50);
+      case 'Irrigation': return const Color(0xFF3296C8);
+      default: return const Color(0xFF8B75B7);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Récupération du thème
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final firstWeekday = DateTime(_month.year, _month.month, 1).weekday;
     final daysInMonth = DateTime(_month.year, _month.month + 1, 0).day;
     final leadingEmptyDays = firstWeekday - 1;
@@ -192,7 +201,8 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
     final today = DateTime.now();
 
     return Scaffold(
-      backgroundColor: background,
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Calendrier agricole'),
         backgroundColor: green,
@@ -210,58 +220,54 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                   Expanded(
                     child: Text(
                       '${_months[_month.month - 1]} ${_month.year}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: darkGreen,
+                        color: isDark ? Colors.white : darkGreen, // ✅ S'adapte
                       ),
                     ),
                   ),
                   IconButton(
                     tooltip: 'Mois précédent',
                     onPressed: () => _changeMonth(-1),
-                    icon: const Icon(Icons.chevron_left),
+                    icon: Icon(Icons.chevron_left, color: theme.colorScheme.onSurface),
                   ),
                   IconButton(
                     tooltip: 'Mois suivant',
                     onPressed: () => _changeMonth(1),
-                    icon: const Icon(Icons.chevron_right),
+                    icon: Icon(Icons.chevron_right, color: theme.colorScheme.onSurface),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
               Card(
-                elevation: 1,
-                color: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+                elevation: isDark ? 0 : 1,
+                // ✅ Fond de la carte (calendrier)
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Column(
                     children: [
                       Row(
-                        children: _weekdays
-                            .map((day) => Expanded(
+                        children: _weekdays.map((day) => Expanded(
                           child: Center(
                             child: Text(
                               day,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: darkGreen,
+                                color: isDark ? Colors.white70 : darkGreen, // ✅ S'adapte
                               ),
                             ),
                           ),
-                        ))
-                            .toList(),
+                        )).toList(),
                       ),
                       const SizedBox(height: 8),
                       GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: cellCount,
-                        gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 7,
                           mainAxisSpacing: 5,
                           crossAxisSpacing: 5,
@@ -273,22 +279,14 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                             return const SizedBox.shrink();
                           }
 
-                          final date = DateTime(
-                            _month.year,
-                            _month.month,
-                            dayNumber,
-                          );
-
+                          final date = DateTime(_month.year, _month.month, dayNumber);
                           final selected = _sameDay(date, _selectedDay);
                           final isToday = _sameDay(date, today);
-                          final hasTasks =
-                          _tasks.any((task) => _sameDay(task.date, date));
+                          final hasTasks = _tasks.any((task) => _sameDay(task.date, date));
 
                           return InkWell(
                             borderRadius: BorderRadius.circular(10),
-                            onTap: () {
-                              setState(() => _selectedDay = date);
-                            },
+                            onTap: () => setState(() => _selectedDay = date),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: selected ? green : Colors.transparent,
@@ -303,12 +301,11 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                                   Text(
                                     '$dayNumber',
                                     style: TextStyle(
-                                      fontWeight: selected || isToday
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
+                                      fontWeight: selected || isToday ? FontWeight.bold : FontWeight.normal,
+                                      // ✅ Couleur du texte des jours
                                       color: selected
                                           ? Colors.white
-                                          : Colors.black87,
+                                          : theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 3),
@@ -317,9 +314,7 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                                       width: 5,
                                       height: 5,
                                       decoration: BoxDecoration(
-                                        color: selected
-                                            ? Colors.white
-                                            : green,
+                                        color: selected ? Colors.white : green,
                                         shape: BoxShape.circle,
                                       ),
                                     )
@@ -342,10 +337,10 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                   Expanded(
                     child: Text(
                       _dateLabel(_selectedDay),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: darkGreen,
+                        color: isDark ? Colors.white : darkGreen,
                       ),
                     ),
                   ),
@@ -353,9 +348,7 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                     onPressed: _showAddTaskDialog,
                     icon: const Icon(Icons.add),
                     label: const Text('Ajouter'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: green,
-                    ),
+                    style: FilledButton.styleFrom(backgroundColor: green),
                   ),
                 ],
               ),
@@ -365,17 +358,16 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(22),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Column(
+                  child: Column(
                     children: [
-                      Icon(Icons.event_available,
-                          size: 38, color: Colors.grey),
-                      SizedBox(height: 8),
+                      const Icon(Icons.event_available, size: 38, color: Colors.grey),
+                      const SizedBox(height: 8),
                       Text(
                         'Aucune tâche pour cette journée',
-                        style: TextStyle(color: Colors.black54),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     ],
                   ),
@@ -383,8 +375,9 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
               else
                 ..._selectedTasks.map((task) {
                   return Card(
-                    color: Colors.white,
-                    elevation: 1,
+                    // ✅ Fond des tâches
+                    color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    elevation: isDark ? 0 : 1,
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: Checkbox(
@@ -398,12 +391,10 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                         task.title,
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          decoration: task.completed
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
+                          decoration: task.completed ? TextDecoration.lineThrough : TextDecoration.none,
                           color: task.completed
                               ? Colors.grey
-                              : Colors.black87,
+                              : theme.colorScheme.onSurface, // ✅ Texte dynamique
                         ),
                       ),
                       subtitle: Text(
@@ -412,20 +403,19 @@ class _HarvestCalendarPageState extends State<HarvestCalendarPage> {
                       ),
                       trailing: IconButton(
                         tooltip: 'Supprimer',
-                        icon: const Icon(Icons.delete_outline,
-                            color: Colors.red),
+                        icon: const Icon(Icons.delete_outline, color: Colors.red),
                         onPressed: () => _deleteTask(task),
                       ),
                     ),
                   );
                 }),
               const SizedBox(height: 18),
-              const Text(
+              Text(
                 'Résumé des tâches',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: darkGreen,
+                  color: isDark ? Colors.white : darkGreen,
                 ),
               ),
               const SizedBox(height: 10),
@@ -482,11 +472,15 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
         decoration: BoxDecoration(
-          color: Colors.white,
+          // ✅ Fond de la carte statistique dynamique
+          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
@@ -495,18 +489,19 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSurface, // ✅ S'adapte
               ),
             ),
             const SizedBox(height: 3),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: Colors.black54,
+                color: theme.colorScheme.onSurfaceVariant, // ✅ S'adapte
               ),
             ),
           ],

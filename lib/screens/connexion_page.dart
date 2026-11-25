@@ -90,17 +90,8 @@ class _ConnexionPageState extends State<ConnexionPage> {
           ok
               ? 'Email de réinitialisation envoyé'
               : context.read<AuthProvider>().erreur ??
-                    'Une erreur est survenue',
+              'Une erreur est survenue',
         ),
-      ),
-    );
-  }
-
-  // Face Authentication : en attente d'implémentation
-  void _connexionFaciale() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Authentification faciale pas encore disponible'),
       ),
     );
   }
@@ -283,49 +274,24 @@ class _ConnexionPageState extends State<ConnexionPage> {
                         ),
                         child: auth.occupe
                             ? const SizedBox(
-                                height: 25,
-                                width: 25,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: darkGreen,
-                                ),
-                              )
+                          height: 25,
+                          width: 25,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: darkGreen,
+                          ),
+                        )
                             : const Text(
-                                'Se connecter',
-                                style: TextStyle(
-                                  fontSize: 21,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Face Authentication
-                    SizedBox(
-                      height: 62,
-                      child: OutlinedButton.icon(
-                        onPressed: auth.occupe ? null : _connexionFaciale,
-                        icon: const Icon(
-                          Icons.face_retouching_natural,
-                          size: 28,
-                        ),
-                        label: const Text(
-                          'Connexion faciale (ML Kit)',
-                          style: TextStyle(fontSize: 17),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: const Color(0xFF263B28),
-                          side: const BorderSide(color: borderGreen, width: 2),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(40),
+                          'Se connecter',
+                          style: TextStyle(
+                            fontSize: 21,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 65),
+                    const SizedBox(height: 50),
 
                     // Inscription
                     Center(
@@ -343,17 +309,17 @@ class _ConnexionPageState extends State<ConnexionPage> {
                             onTap: auth.occupe
                                 ? null
                                 : () {
-                                    context
-                                        .read<AuthProvider>()
-                                        .effacerErreur();
+                              context
+                                  .read<AuthProvider>()
+                                  .effacerErreur();
 
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const InscriptionPage(),
-                                      ),
-                                    );
-                                  },
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const InscriptionPage(),
+                                ),
+                              );
+                            },
                             child: const Text(
                               "S'inscrire",
                               style: TextStyle(

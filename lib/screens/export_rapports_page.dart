@@ -22,14 +22,11 @@ class ExportRapportsPage extends StatefulWidget {
 }
 
 class _ExportRapportsPageState extends State<ExportRapportsPage> {
-  static const Color _bg = Color(0xFFE7EFE6);
-  static const Color _cardBg = Color(0xFFF2F7F1);
+  // On garde les couleurs vertes de base qui fonctionnent bien
   static const Color _vertFonce = Color(0xFF4E8A42);
   static const Color _vertApp = Color(0xFF276738);
   static const Color _vertBouton = Color(0xFF9CE08E);
   static const Color _rougeAlerte = Color(0xFFC93B2B);
-  static const Color _textePrincipal = Color(0xFF1A221B);
-  static const Color _texteSecondaire = Color(0xFF556256);
 
   String _periodeSelectionnee = 'Ce mois-ci';
   String _zoneSelectionnee = 'Toutes les parcelles';
@@ -296,9 +293,12 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
     await _chargerFichiersPdf();
     if (!mounted) return;
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: _cardBg,
+      backgroundColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF2F7F1),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -310,27 +310,27 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.picture_as_pdf, color: _vertApp),
-                    SizedBox(width: 8),
+                    const Icon(Icons.picture_as_pdf, color: _vertApp),
+                    const SizedBox(width: 8),
                     Text(
                       'Choisir un fichier PDF',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
-                        color: _textePrincipal,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 if (_fichiersPdfDisponibles.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     child: Text(
                       'Aucun fichier PDF trouvé. Clique sur "Exporter en PDF" pour en créer un.',
-                      style: TextStyle(color: _texteSecondaire),
+                      style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                     ),
                   )
                 else
@@ -358,10 +358,13 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                               fontWeight: estSelectionne
                                   ? FontWeight.w700
                                   : FontWeight.w500,
-                              color: _textePrincipal,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
-                          subtitle: Text('$tailleKo Ko · ${file.path}'),
+                          subtitle: Text(
+                            '$tailleKo Ko · ${file.path}',
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                          ),
                           trailing: estSelectionne
                               ? const Icon(Icons.check_circle, color: _vertApp)
                               : null,
@@ -391,18 +394,17 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
   }
 
   Future<void> _choisirPeriodePersonnalisee() async {
+    final theme = Theme.of(context);
     final DateTimeRange? plage = await showDateRangePicker(
       context: context,
       firstDate: DateTime(2024, 1, 1),
       lastDate: DateTime(2027, 12, 31),
       builder: (context, child) {
         return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+          data: theme.copyWith(
+            colorScheme: theme.colorScheme.copyWith(
               primary: _vertFonce,
               onPrimary: Colors.white,
-              surface: _cardBg,
-              onSurface: _textePrincipal,
             ),
           ),
           child: child!,
@@ -438,6 +440,10 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Récupération du thème
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final zonesProvider = context.watch<ZonesProvider>();
     final zones = _extraireZones(zonesProvider);
     final nbZonesAIrriguer = _lireNbZonesAIrriguer(zonesProvider, zones);
@@ -467,21 +473,22 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
         : null;
 
     return Scaffold(
-      backgroundColor: _bg,
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: _bg,
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: _textePrincipal),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.maybePop(context),
         ),
-        title: const Text(
+        title: Text(
           'Exportation des rapports',
           style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w500,
-            color: _textePrincipal,
+            color: theme.colorScheme.onSurface,
           ),
         ),
         actions: [
@@ -498,29 +505,29 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Générer un Rapport',
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w500,
-                  color: _textePrincipal,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Filtres',
                 style: TextStyle(
                   fontSize: 15,
-                  color: _texteSecondaire,
+                  color: theme.colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Période',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: _textePrincipal,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 10),
@@ -531,8 +538,8 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                   _FiltreChip(
                     label: 'Ce mois-ci',
                     selected: _periodeSelectionnee == 'Ce mois-ci',
-                    onTap: () =>
-                        setState(() => _periodeSelectionnee = 'Ce mois-ci'),
+                    onTap: () => setState(() => _periodeSelectionnee = 'Ce mois-ci'),
+                    isDark: isDark, // ✅ On passe le thème
                   ),
                   _FiltreChip(
                     label: _periodeSelectionnee != 'Ce mois-ci'
@@ -540,16 +547,17 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                         : 'Personnalisé',
                     selected: _periodeSelectionnee != 'Ce mois-ci',
                     onTap: _choisirPeriodePersonnalisee,
+                    isDark: isDark, // ✅ On passe le thème
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Zone',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: _textePrincipal,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 10),
@@ -563,33 +571,40 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                         label: nomZone,
                         selected: _zoneSelectionnee == nomZone,
                         onTap: () => setState(() => _zoneSelectionnee = nomZone),
+                        isDark: isDark, // ✅ On passe le thème
                       ),
                     );
                   }).toList(),
                 ),
               ),
               const SizedBox(height: 20),
+              // ✅ Flexible : le nom du PDF se tronque au lieu de déborder (bande jaune)
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'Aperçu du Rapport',
                     style: TextStyle(
                       fontSize: 15,
-                      color: _texteSecondaire,
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: _ouvrirSelecteurFichierPdf,
-                    icon: const Icon(Icons.picture_as_pdf,
-                        size: 18, color: _vertApp),
-                    label: Text(
-                      nomPdfActuel ?? 'Choisir PDF',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: _vertApp,
-                        fontWeight: FontWeight.w600,
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: _ouvrirSelecteurFichierPdf,
+                        icon: const Icon(Icons.picture_as_pdf,
+                            size: 18, color: _vertApp),
+                        label: Text(
+                          nomPdfActuel ?? 'Choisir PDF',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: _vertApp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -600,14 +615,16 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: _cardBg,
+                  // ✅ Fond de la carte d'aperçu
+                  color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF2F7F1),
                   borderRadius: BorderRadius.circular(24),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color.fromRGBO(0, 0, 0, 0.08),
-                      blurRadius: 12,
-                      offset: Offset(0, 5),
-                    ),
+                  boxShadow: [
+                    if (!isDark)
+                      const BoxShadow(
+                        color: Color.fromRGBO(0, 0, 0, 0.08),
+                        blurRadius: 12,
+                        offset: Offset(0, 5),
+                      ),
                   ],
                 ),
                 child: Row(
@@ -617,36 +634,36 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Rapport : Novembre 2026',
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
-                              color: _textePrincipal,
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'Irrigations : $cycles cycles (${litres}L)',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15.5,
-                              color: _textePrincipal,
+                              color: theme.colorScheme.onSurface,
                               height: 1.4,
                             ),
                           ),
                           Text(
                             'Humidité moy. : ${humMoy.toStringAsFixed(1)}%',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15.5,
-                              color: _textePrincipal,
+                              color: theme.colorScheme.onSurface,
                               height: 1.4,
                             ),
                           ),
                           Text(
                             'Alertes résolues : $alertesResolues',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15.5,
-                              color: _textePrincipal,
+                              color: theme.colorScheme.onSurface,
                               height: 1.4,
                             ),
                           ),
@@ -667,7 +684,7 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                       ),
                     ),
                     const SizedBox(width: 14),
-                    const _ApercuDocumentIllustration(),
+                    _ApercuDocumentIllustration(isDark: isDark), // ✅ On passe le thème
                   ],
                 ),
               ),
@@ -678,28 +695,19 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                 child: ElevatedButton.icon(
                   onPressed: _isExporting
                       ? null
-                      : () => _exporterPdf(
-                    zones,
-                    cycles,
-                    litres,
-                    humMoy,
-                    alertesResolues,
-                  ),
-                  icon: const Icon(
-                    Icons.picture_as_pdf_outlined,
-                    color: _textePrincipal,
-                  ),
+                      : () => _exporterPdf(zones, cycles, litres, humMoy, alertesResolues),
+                  icon: const Icon(Icons.picture_as_pdf_outlined, color: Color(0xFF283D27)),
                   label: const Text(
                     'Exporter en PDF',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
-                      color: _textePrincipal,
+                      color: Color(0xFF283D27),
                     ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _vertBouton,
-                    foregroundColor: _textePrincipal,
+                    foregroundColor: const Color(0xFF283D27),
                     elevation: 3,
                     shadowColor: const Color.fromRGBO(0, 0, 0, 0.14),
                     shape: RoundedRectangleBorder(
@@ -715,30 +723,22 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
                 child: OutlinedButton.icon(
                   onPressed: _isExporting
                       ? null
-                      : () => _exporterCsv(
-                    zones,
-                    cycles,
-                    litres,
-                    humMoy,
-                    alertesResolues,
-                  ),
-                  icon: const Icon(
-                    Icons.table_chart_outlined,
-                    color: _textePrincipal,
-                  ),
-                  label: const Text(
+                      : () => _exporterCsv(zones, cycles, litres, humMoy, alertesResolues),
+                  icon: Icon(Icons.table_chart_outlined, color: theme.colorScheme.onSurface),
+                  label: Text(
                     'Exporter en CSV',
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w500,
-                      color: _textePrincipal,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE5EEE4),
-                    foregroundColor: _textePrincipal,
-                    side: const BorderSide(
-                      color: Color(0xFF9EB59B),
+                    // ✅ Fond du bouton CSV dynamique
+                    backgroundColor: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFE5EEE4),
+                    foregroundColor: theme.colorScheme.onSurface,
+                    side: BorderSide(
+                      color: isDark ? Colors.white24 : const Color(0xFF9EB59B),
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
@@ -752,14 +752,15 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
         ),
       ),
       bottomNavigationBar: NavigationBar(
-        backgroundColor: _bg,
-        indicatorColor: const Color(0xFFD6E5D4),
+        // ✅ Fond de la navbar dynamique
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : theme.scaffoldBackgroundColor,
+        indicatorColor: isDark ? const Color(0xFF3A5A3A) : const Color(0xFFD6E5D4),
         selectedIndex: 0,
         onDestinationSelected: _naviguerBas,
         destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home, color: _vertApp),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined, color: theme.colorScheme.onSurfaceVariant),
+            selectedIcon: const Icon(Icons.home, color: _vertApp),
             label: 'Accueil',
           ),
           NavigationDestination(
@@ -767,7 +768,7 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
               label: Text('$nbZonesAIrriguer'),
               isLabelVisible: nbZonesAIrriguer > 0,
               backgroundColor: _rougeAlerte,
-              child: const Icon(Icons.grass_outlined),
+              child: Icon(Icons.grass_outlined, color: theme.colorScheme.onSurface),
             ),
             selectedIcon: Badge(
               label: Text('$nbZonesAIrriguer'),
@@ -777,14 +778,14 @@ class _ExportRapportsPageState extends State<ExportRapportsPage> {
             ),
             label: 'Zones',
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart, color: _vertApp),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined, color: theme.colorScheme.onSurfaceVariant),
+            selectedIcon: const Icon(Icons.bar_chart, color: _vertApp),
             label: 'Statistiques',
           ),
-          const NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person, color: _vertApp),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline, color: theme.colorScheme.onSurfaceVariant),
+            selectedIcon: const Icon(Icons.person, color: _vertApp),
             label: 'Profil',
           ),
         ],
@@ -797,17 +798,24 @@ class _FiltreChip extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final bool isDark; // ✅ Ajout du paramètre
 
   const _FiltreChip({
     required this.label,
     required this.selected,
     required this.onTap,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Material(
-      color: selected ? const Color(0xFF4E8A42) : const Color(0xFFF2F7F1),
+      // ✅ Couleur du chip dynamique
+      color: selected
+          ? const Color(0xFF4E8A42)
+          : (isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF2F7F1)),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
@@ -822,7 +830,8 @@ class _FiltreChip extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: selected ? Colors.white : const Color(0xFF1A221B),
+                  // ✅ Texte dynamique
+                  color: selected ? Colors.white : theme.colorScheme.onSurface,
                 ),
               ),
               if (selected) ...[
@@ -842,7 +851,9 @@ class _FiltreChip extends StatelessWidget {
 }
 
 class _ApercuDocumentIllustration extends StatelessWidget {
-  const _ApercuDocumentIllustration();
+  final bool isDark; // ✅ Ajout du paramètre
+
+  const _ApercuDocumentIllustration({required this.isDark});
 
   @override
   Widget build(BuildContext context) {
@@ -851,15 +862,19 @@ class _ApercuDocumentIllustration extends StatelessWidget {
       height: 112,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        // ✅ Fond de la miniature dynamique
+        color: isDark ? const Color(0xFF2C2C2C) : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFD8E2D7)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 0, 0.06),
-            blurRadius: 6,
-            offset: Offset(0, 3),
-          ),
+        border: Border.all(
+          color: isDark ? Colors.white24 : const Color(0xFFD8E2D7),
+        ),
+        boxShadow: [
+          if (!isDark)
+            const BoxShadow(
+              color: Color.fromRGBO(0, 0, 0, 0.06),
+              blurRadius: 6,
+              offset: Offset(0, 3),
+            ),
         ],
       ),
       child: Column(
@@ -869,7 +884,7 @@ class _ApercuDocumentIllustration extends StatelessWidget {
             height: 44,
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F8F2),
+              color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
               borderRadius: BorderRadius.circular(6),
             ),
             child: CustomPaint(
@@ -883,7 +898,8 @@ class _ApercuDocumentIllustration extends StatelessWidget {
               height: 5,
               margin: EdgeInsets.only(bottom: index == 3 ? 0 : 5),
               decoration: BoxDecoration(
-                color: const Color(0xFF9AA59B),
+                // ✅ Couleur des lignes de texte dynamique
+                color: isDark ? Colors.white24 : const Color(0xFF9AA59B),
                 borderRadius: BorderRadius.circular(3),
               ),
             ),

@@ -13,23 +13,29 @@ class StatistiquesPage extends StatefulWidget {
 
 class _StatistiquesPageState extends State<StatistiquesPage> {
   void _showAddStatDialog() {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFF3F7F2),
+        // ✅ Fond de l'alerte dynamique
+        backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Ajouter une mesure',
-          style: TextStyle(color: Color(0xFF283D27), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        content: const Text(
+        content: Text(
           'Fonctionnalité pour ajouter des données statistiques.',
-          style: TextStyle(color: Color(0xFF4E5B4D)),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer', style: TextStyle(color: Colors.grey)),
+            child: Text('Fermer', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -46,6 +52,9 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final zonesProvider = context.watch<ZonesProvider>();
     final zones = zonesProvider.zones;
 
@@ -53,20 +62,21 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
     final zonesAlerte = zones.where((z) => z.humidite < 35.0 || z.besoinIrrigation).toList();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE3ECE1),
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // العنوان الرئيسي للصفحة
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
               child: Text(
                 'AgriSmart – Statistiques',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF283D27),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -80,60 +90,68 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                   ListView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
                     children: [
-                      // --- بطاقة المنحنى البياني الشامل لكل الحقول (Tout Parciel) ---
+                      // --- بطاقة المنحنى البياني ---
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F7F2),
+                          // ✅ Fond de la carte
+                          color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                           borderRadius: BorderRadius.circular(24),
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.06),
-                              blurRadius: 12,
-                              offset: const Offset(0, 5),
-                            ),
+                            if (!isDark)
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.06),
+                                blurRadius: 12,
+                                offset: const Offset(0, 5),
+                              ),
                           ],
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               "Évolution de l'humidité",
                               style: TextStyle(
                                 fontSize: 19,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFF283D27),
+                                color: theme.colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 2),
-                            const Text(
+                            Text(
                               "Comparaison de toutes les parcelles",
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF4E5B4D),
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                             const SizedBox(height: 20),
 
                             // رسم المنحنى البياني التفاعلي لكل الحقول
                             zones.isEmpty
-                                ? const Center(
+                                ? Center(
                               child: Padding(
-                                padding: EdgeInsets.all(20.0),
-                                child: Text('Aucune parcelle disponible'),
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text(
+                                  'Aucune parcelle disponible',
+                                  style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                                ),
                               ),
                             )
                                 : SizedBox(
                               height: 180,
                               child: CustomPaint(
                                 size: const Size(double.infinity, 180),
-                                painter: ParcellesChartPainter(zones: zones),
+                                painter: ParcellesChartPainter(
+                                  zones: zones,
+                                  isDark: isDark, // ✅ On passe le thème au peintre
+                                ),
                               ),
                             ),
 
                             const SizedBox(height: 12),
 
-                            // مفتاح توضيحي للمنحنى (أسماء الحقول ونسبها)
+                            // مفتاح توضيحي للمنحنى
                             if (zones.isNotEmpty)
                               Wrap(
                                 spacing: 12,
@@ -153,7 +171,10 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                                       const SizedBox(width: 4),
                                       Text(
                                         '${zone.nom} (${zone.humidite.toStringAsFixed(0)}%)',
-                                        style: const TextStyle(fontSize: 12, color: Color(0xFF283D27)),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: theme.colorScheme.onSurface,
+                                        ),
                                       ),
                                     ],
                                   );
@@ -165,13 +186,13 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
 
                       const SizedBox(height: 24),
 
-                      // --- قسم سجل التنبيهات الحقيقي ---
-                      const Text(
+                      // --- قسم سجل التنبيهات ---
+                      Text(
                         'Historique des alertes',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF283D27),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
 
@@ -181,12 +202,12 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF3F7F2),
+                            color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Aucune alerte active sur vos parcelles. Tout fonctionne parfaitement.',
-                            style: TextStyle(color: Color(0xFF4E5B4D)),
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                           ),
                         )
                       else
@@ -194,9 +215,13 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFCE8E6),
+                            // ✅ Fond d'alerte dynamique (rouge foncé en mode sombre)
+                            color: isDark ? const Color(0xFF3E1A1A) : const Color(0xFFFCE8E6),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.red.shade200, width: 1),
+                            border: Border.all(
+                              color: isDark ? Colors.red.shade900 : Colors.red.shade200,
+                              width: 1,
+                            ),
                           ),
                           child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,10 +241,10 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                                   children: [
                                     Text(
                                       '${zone.nom} - Humidité basse',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF283D27),
+                                        color: isDark ? Colors.white : const Color(0xFF283D27),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -227,7 +252,7 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
                                       'Taux mesuré : ${zone.humidite.toStringAsFixed(1)}% (Seuil : 35%)',
                                       style: TextStyle(
                                         fontSize: 14,
-                                        color: Colors.red.shade900,
+                                        color: isDark ? Colors.red.shade300 : Colors.red.shade900,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -266,18 +291,20 @@ class _StatistiquesPageState extends State<StatistiquesPage> {
   }
 }
 
-// رسم المنحنى البياني للمقارنة بين جميع الحقول (Tout Parciel)
+// رسم المنحنى البياني
 class ParcellesChartPainter extends CustomPainter {
   final List<dynamic> zones;
+  final bool isDark; // ✅ Ajout du paramètre isDark
 
-  ParcellesChartPainter({required this.zones});
+  ParcellesChartPainter({required this.zones, required this.isDark});
 
   @override
   void paint(Canvas canvas, Size size) {
     if (zones.isEmpty) return;
 
+    // ✅ Grille plus claire en mode sombre
     final paintGrid = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
+      ..color = isDark ? Colors.white24 : Colors.grey.withOpacity(0.3)
       ..strokeWidth = 1;
 
     // خطوط الشبكة الأفقية
@@ -288,15 +315,14 @@ class ParcellesChartPainter extends CustomPainter {
 
     // خط عتبة الإنذار عند 35%
     final paintThreshold = Paint()
-      ..color = Colors.red.shade400
+      ..color = isDark ? Colors.red.shade300 : Colors.red.shade400
       ..strokeWidth = 1.5
       ..style = PaintingStyle.stroke;
 
-    // رسم خط منقط للعتبة
     double thresholdY = size.height - (35 / 100 * size.height);
     canvas.drawLine(Offset(0, thresholdY), Offset(size.width, thresholdY), paintThreshold);
 
-    // رسم المنحنى البياني للرطوبة عبر الحقول
+    // رسم المنحنى البياني
     final paintLine = Paint()
       ..color = const Color(0xFF4C8046)
       ..strokeWidth = 3
@@ -316,9 +342,11 @@ class ParcellesChartPainter extends CustomPainter {
         path.lineTo(x, y);
       }
 
-      // رسم نقاط على المنحنى لكل حقل
+      // ✅ Couleur des points dynamique
       final paintPoint = Paint()
-        ..color = zones[i].humidite < 35 ? Colors.red : const Color(0xFF283D27)
+        ..color = zones[i].humidite < 35
+            ? Colors.red
+            : (isDark ? Colors.white70 : const Color(0xFF283D27))
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(x, y), 5, paintPoint);
     }
@@ -327,5 +355,8 @@ class ParcellesChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant ParcellesChartPainter oldDelegate) {
+    // ✅ On repeint si le thème change
+    return oldDelegate.isDark != isDark;
+  }
 }

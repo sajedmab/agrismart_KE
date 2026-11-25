@@ -14,7 +14,7 @@ import 'package:agrismart/screens/diagnostic_plante_page.dart';
 import 'package:agrismart/screens/taches_a_venir_page.dart';
 import 'package:agrismart/screens/equipements_page.dart';
 import 'package:agrismart/screens/journal_activites_page.dart';
-import 'package:agrismart/screens/harvest_calendar_page.dart'; // ✅ IMPORT AJOUTÉ
+import 'package:agrismart/screens/harvest_calendar_page.dart';
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -192,7 +192,6 @@ class AccueilPageState extends State<AccueilPage> {
     );
   }
 
-  // ✅ NOUVELLE MÉTHODE POUR LE CALENDRIER
   Future<void> _ouvrirCalendrier() async {
     await Navigator.push(
       context,
@@ -202,6 +201,9 @@ class AccueilPageState extends State<AccueilPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final authProvider = context.watch<AuthProvider>();
     final meteoProvider = context.watch<MeteoProvider>();
     final zonesProvider = context.watch<ZonesProvider>();
@@ -223,7 +225,8 @@ class AccueilPageState extends State<AccueilPage> {
         : 'Parcelle Nord · Détails';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F0),
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(14, 10, 14, 90),
@@ -234,16 +237,17 @@ class AccueilPageState extends State<AccueilPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.eco, color: Color(0xFF4CAF50), size: 30),
-                      SizedBox(width: 6),
+                      const Icon(Icons.eco, color: Color(0xFF4CAF50), size: 30),
+                      const SizedBox(width: 6),
                       Text(
                         'AgriSmart',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF3E7B3A),
+                          // ✅ La couleur du texte s'adapte au thème (devient blanc en mode sombre)
+                          color: isDark ? Colors.white : const Color(0xFF3E7B3A),
                         ),
                       ),
                     ],
@@ -280,19 +284,19 @@ class AccueilPageState extends State<AccueilPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           "Aujourd'hui",
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF1F2937),
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         Text(
                           _dateFormatee(),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF374151),
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -300,18 +304,18 @@ class AccueilPageState extends State<AccueilPage> {
                     const SizedBox(height: 8),
                     Text(
                       nomUser,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF111827),
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       '- $zonePrincipale',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF4B5563),
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -331,10 +335,10 @@ class AccueilPageState extends State<AccueilPage> {
                             'Météo $ville',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF1F2937),
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -343,15 +347,15 @@ class AccueilPageState extends State<AccueilPage> {
                             children: [
                               Text(
                                 temperature,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 26,
                                   fontWeight: FontWeight.w500,
-                                  color: Color(0xFF111827),
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
-                              Icon(
+                              const Icon(
                                 Icons.wb_sunny_outlined,
-                                color: const Color(0xFFEAB308),
+                                color: Color(0xFFEAB308),
                                 size: 30,
                               ),
                             ],
@@ -372,12 +376,12 @@ class AccueilPageState extends State<AccueilPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Alerte',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF1F2937),
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: 6),
@@ -385,10 +389,10 @@ class AccueilPageState extends State<AccueilPage> {
                             zonesAIrriguer == 1
                                 ? '1 parcelle à\nirriguer'
                                 : '$zonesAIrriguer parcelles à\nirriguer',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF111827),
+                              color: theme.colorScheme.onSurface,
                               height: 1.2,
                             ),
                           ),
@@ -429,7 +433,6 @@ class AccueilPageState extends State<AccueilPage> {
                     label: 'Équipements',
                     onTap: _ouvrirEquipements,
                   ),
-                  // ✅ BOUTON CALENDRIER CORRIGÉ
                   _BoutonVert(
                     icon: Icons.calendar_today,
                     label: 'Calendrier',
@@ -504,7 +507,8 @@ class _CarteBlanche extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      // ✅ Fond de la carte dynamique (blanc en clair, gris foncé en sombre)
+      color: Theme.of(context).cardColor,
       borderRadius: BorderRadius.circular(10),
       child: InkWell(
         borderRadius: BorderRadius.circular(10),

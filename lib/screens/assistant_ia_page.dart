@@ -167,24 +167,15 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
 
     try {
       switch (champ) {
-        case 'meteo':
-          return obj.meteo;
-        case 'currentMeteo':
-          return obj.currentMeteo;
-        case 'donnees':
-          return obj.donnees;
-        case 'temperature':
-          return obj.temperature;
-        case 'temp':
-          return obj.temp;
-        case 'description':
-          return obj.description;
-        case 'condition':
-          return obj.condition;
-        case 'nombreAIrriguer':
-          return obj.nombreAIrriguer;
-        default:
-          return null;
+        case 'meteo': return obj.meteo;
+        case 'currentMeteo': return obj.currentMeteo;
+        case 'donnees': return obj.donnees;
+        case 'temperature': return obj.temperature;
+        case 'temp': return obj.temp;
+        case 'description': return obj.description;
+        case 'condition': return obj.condition;
+        case 'nombreAIrriguer': return obj.nombreAIrriguer;
+        default: return null;
       }
     } catch (_) {
       return null;
@@ -215,28 +206,20 @@ class _AssistantIaPageState extends State<AssistantIaPage> {
 
   String _extraireConditionMeteo(MeteoProvider provider) {
     final dynamic data = _extraireMeteoObj(provider);
-    final raw =
-        _lireChampDyn(data, 'description') ?? _lireChampDyn(data, 'condition');
+    final raw = _lireChampDyn(data, 'description') ?? _lireChampDyn(data, 'condition');
     if (raw is String && raw.trim().isNotEmpty) return raw.trim();
     return 'ensoleillées et sèches';
   }
 
-  String _construireContexteAgricole(
-      List<Zone> zones,
-      MeteoProvider meteoProvider,
-      ) {
+  String _construireContexteAgricole(List<Zone> zones, MeteoProvider meteoProvider) {
     final ville = _extraireVille(meteoProvider);
     final temp = _extraireTemperature(meteoProvider) ?? 'non disponible';
     final condition = _extraireConditionMeteo(meteoProvider);
 
     final lignesZones = zones.isEmpty
         ? 'Aucune parcelle enregistrée.'
-        : zones
-        .map(
-          (z) =>
-      '- ${z.nom}: culture=${z.culture}, humidite=${z.humidite.toStringAsFixed(1)}%, seuil=${z.seuil.toStringAsFixed(1)}%, vanne=${z.vanneOuverte ? "ouverte" : "fermee"}, besoinIrrigation=${z.besoinIrrigation}',
-    )
-        .join('\n');
+        : zones.map((z) =>
+    '- ${z.nom}: culture=${z.culture}, humidite=${z.humidite.toStringAsFixed(1)}%, seuil=${z.seuil.toStringAsFixed(1)}%, vanne=${z.vanneOuverte ? "ouverte" : "fermee"}, besoinIrrigation=${z.besoinIrrigation}').join('\n');
 
     return '''
 Tu es l'assistant agricole intelligent de l'application AgriSmart.
@@ -279,51 +262,21 @@ $lignesZones
         : _messages;
 
     final contents = [
-      {
-        'role': 'user',
-        'parts': [
-          {'text': systemPrompt},
-        ],
-      },
-      {
-        'role': 'model',
-        'parts': [
-          {
-            'text':
-            'Compris. Je répondrai de façon ciblée selon la question et les parcelles sélectionnées.',
-          },
-        ],
-      },
-      ...historiqueRecent.map(
-            (m) => {
-          'role': m.estUtilisateur ? 'user' : 'model',
-          'parts': [
-            {'text': m.texte},
-          ],
-        },
-      ),
-      {
-        'role': 'user',
-        'parts': [
-          {'text': question},
-        ],
-      },
+      {'role': 'user', 'parts': [{'text': systemPrompt}]},
+      {'role': 'model', 'parts': [{'text': 'Compris. Je répondrai de façon ciblée selon la question et les parcelles sélectionnées.'}]},
+      ...historiqueRecent.map((m) => {'role': m.estUtilisateur ? 'user' : 'model', 'parts': [{'text': m.texte}]}),
+      {'role': 'user', 'parts': [{'text': question}]},
     ];
 
     try {
-      final response = await http
-          .post(
+      final response = await http.post(
         uri,
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'contents': contents,
-          'generationConfig': {
-            'temperature': 0.7,
-            'maxOutputTokens': 500,
-          },
+          'generationConfig': {'temperature': 0.7, 'maxOutputTokens': 500},
         }),
-      )
-          .timeout(const Duration(seconds: 20));
+      ).timeout(const Duration(seconds: 20));
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final decoded = jsonDecode(response.body);
@@ -377,20 +330,12 @@ $lignesZones
           "Surveillez l'évaporation aux heures chaudes et privilégiez l'arrosage matinal ou en fin de journée.";
     }
 
-    if (q.contains('alerte') ||
-        q.contains('besoin') ||
-        q.contains('quelles') ||
-        q.contains('toutes')) {
+    if (q.contains('alerte') || q.contains('besoin') || q.contains('quelles') || q.contains('toutes')) {
       final enAlerte = zones.where((z) => z.besoinIrrigation).toList();
       if (enAlerte.isEmpty) {
         return "Toutes les ${zones.length} parcelles suivies à $ville ont une humidité au-dessus de leur seuil.";
       }
-      final liste = enAlerte
-          .map(
-            (z) =>
-        "• ${z.nom} (${z.culture}) : ${z.humidite.toStringAsFixed(1)}% / seuil ${z.seuil.toStringAsFixed(1)}%",
-      )
-          .join('\n');
+      final liste = enAlerte.map((z) => "• ${z.nom} (${z.culture}) : ${z.humidite.toStringAsFixed(1)}% / seuil ${z.seuil.toStringAsFixed(1)}%").join('\n');
       return "Parcelles nécessitant de l'eau (${enAlerte.length}/${zones.length}) :\n$liste";
     }
 
@@ -443,8 +388,7 @@ $lignesZones
           estUtilisateur: false,
           texte: reponse,
           zoneAction: zoneCible,
-          afficherBoutonIrrigation:
-          zoneCible != null && zoneCible.besoinIrrigation,
+          afficherBoutonIrrigation: zoneCible != null && zoneCible.besoinIrrigation,
         ),
       );
     });
@@ -462,16 +406,8 @@ $lignesZones
     return Uri.encodeComponent(zone.nom.trim().toLowerCase());
   }
 
-  Future<void> _enregistrerIrrigationFirestore(
-      Zone zone, {
-        required int dureeMinutes,
-        required double humiditeApres,
-      }) async {
-    await FirebaseFirestore.instance
-        .collection('zones')
-        .doc(_zoneDocId(zone))
-        .collection('historique_irrigations')
-        .add({
+  Future<void> _enregistrerIrrigationFirestore(Zone zone, {required int dureeMinutes, required double humiditeApres}) async {
+    await FirebaseFirestore.instance.collection('zones').doc(_zoneDocId(zone)).collection('historique_irrigations').add({
       'zoneNom': zone.nom,
       'dureeMinutes': dureeMinutes,
       'humiditeApres': humiditeApres,
@@ -495,10 +431,7 @@ $lignesZones
           () async => await zp.mettreAJourHumidite(zone.nom, nouvelleHumidite),
           () async {
         final dynamic zDyn = zone;
-        final Zone maj = zDyn.copyWith(
-          humidite: nouvelleHumidite,
-          vanneOuverte: true,
-        );
+        final Zone maj = zDyn.copyWith(humidite: nouvelleHumidite, vanneOuverte: true);
         await zp.modifierZone(zone.nom, maj);
       },
     ]) {
@@ -509,11 +442,7 @@ $lignesZones
     }
 
     try {
-      await _enregistrerIrrigationFirestore(
-        zone,
-        dureeMinutes: dureeMinutes,
-        humiditeApres: nouvelleHumidite,
-      );
+      await _enregistrerIrrigationFirestore(zone, dureeMinutes: dureeMinutes, humiditeApres: nouvelleHumidite);
     } catch (_) {}
 
     if (!mounted) return;
@@ -522,13 +451,11 @@ $lignesZones
       _messages.add(
         _MessageChat(
           estUtilisateur: false,
-          texte:
-          "Irrigation lancée pendant $dureeMinutes min sur '${zone.nom}' et enregistrée dans l'historique.",
+          texte: "Irrigation lancée pendant $dureeMinutes min sur '${zone.nom}' et enregistrée dans l'historique.",
           afficherBoutonIrrigation: false,
         ),
       );
     });
-
     _defilerVersLeBas();
   }
 
@@ -587,6 +514,9 @@ $lignesZones
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final zonesProvider = context.watch<ZonesProvider>();
     final meteoProvider = context.watch<MeteoProvider>();
 
@@ -596,19 +526,19 @@ $lignesZones
     final questions = _questionsDynamiques(zones, ville);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE7EFE6),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE7EFE6),
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A221B)),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
           IconButton(
             tooltip: 'Effacer discussion',
-            icon: const Icon(Icons.refresh, color: Color(0xFF1A221B)),
+            icon: Icon(Icons.refresh, color: theme.colorScheme.onSurface),
             onPressed: () {
               setState(() {
                 _messages.clear();
@@ -618,7 +548,7 @@ $lignesZones
           ),
           IconButton(
             tooltip: 'Accueil',
-            icon: const Icon(Icons.home_outlined, color: Color(0xFF1A221B)),
+            icon: Icon(Icons.home_outlined, color: theme.colorScheme.onSurface),
             onPressed: () => Navigator.popUntil(context, (route) => route.isFirst),
           ),
         ],
@@ -626,20 +556,20 @@ $lignesZones
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(18, 0, 18, 8),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 8),
             child: Text(
               'Assistant Agricole IA',
               style: TextStyle(
                 fontSize: 27,
                 fontWeight: FontWeight.w500,
-                color: Color(0xFF171E18),
+                color: theme.colorScheme.onSurface,
               ),
             ),
           ),
-          const Center(
+          Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Column(
                 children: [
                   Text(
@@ -647,17 +577,17 @@ $lignesZones
                     style: TextStyle(
                       fontSize: 16.5,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1A221B),
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     'Posez vos questions sur la gestion de vos\nparcelles',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.5,
                       height: 1.3,
-                      color: Color(0xFF3E4A40),
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -675,13 +605,13 @@ $lignesZones
               itemBuilder: (context, i) {
                 final q = questions[i];
                 return ActionChip(
-                  backgroundColor: const Color(0xFFF3F8F2),
-                  side: const BorderSide(color: Color(0xFFC8D7C6)),
+                  backgroundColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
+                  side: BorderSide(color: isDark ? Colors.white24 : const Color(0xFFC8D7C6)),
                   label: Text(
                     q,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
-                      color: Color(0xFF1F2B21),
+                      color: isDark ? Colors.white70 : const Color(0xFF1F2B21),
                     ),
                   ),
                   onPressed: () => _envoyerMessage(q),
@@ -716,21 +646,20 @@ $lignesZones
                     alignment: Alignment.centerRight,
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 14, left: 60),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                       decoration: BoxDecoration(
                         color: const Color(0xFF63A843),
                         borderRadius: BorderRadius.circular(18),
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
+                          if (!isDark)
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.08),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
                         ],
                       ),
+                      // ✅ C'EST ICI QUE LE TEXTE ÉTAIT VIDE, MAINTENANT IL AFFICHE LE MESSAGE
                       child: Text(
                         msg.texte,
                         style: const TextStyle(
@@ -743,84 +672,66 @@ $lignesZones
                   );
                 }
 
+                // Message IA
                 return Align(
                   alignment: Alignment.centerLeft,
                   child: Container(
                     margin: const EdgeInsets.only(bottom: 14, right: 24),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF2F7F1),
+                      color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF2F7F1),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 10,
-                          offset: const Offset(0, 3),
-                        ),
+                        if (!isDark)
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE1ECE0),
+                            color: isDark ? const Color(0xFF3E3E3E) : const Color(0xFFE1ECE0),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Text(
+                          child: Text(
                             'IA AgriSmart 🤖',
                             style: TextStyle(
                               fontSize: 13.5,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF1F2B21),
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                         ),
                         const SizedBox(height: 10),
                         Text(
                           msg.texte,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             height: 1.38,
-                            color: Color(0xFF1A221B),
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
-                        if (msg.afficherBoutonIrrigation &&
-                            msg.zoneAction != null) ...[
+                        if (msg.afficherBoutonIrrigation && msg.zoneAction != null) ...[
                           const SizedBox(height: 14),
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFDCE9DA),
-                              foregroundColor: const Color(0xFF1F3A22),
+                              backgroundColor: isDark ? const Color(0xFF3A5A3A) : const Color(0xFFDCE9DA),
+                              foregroundColor: isDark ? Colors.white : const Color(0xFF1F3A22),
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
-                            onPressed: _enCoursAction
-                                ? null
-                                : () => _demarrerIrrigationDepuisIa(
-                              msg.zoneAction!,
-                            ),
-                            icon: const Icon(
-                              Icons.water_drop,
-                              color: Color(0xFF4BA3E3),
-                              size: 18,
-                            ),
+                            onPressed: _enCoursAction ? null : () => _demarrerIrrigationDepuisIa(msg.zoneAction!),
+                            icon: const Icon(Icons.water_drop, color: Color(0xFF4BA3E3), size: 18),
                             label: const Text(
                               "Démarrer l'irrigation",
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ],
@@ -838,30 +749,29 @@ $lignesZones
                 Expanded(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3F8F2),
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
+                        if (!isDark)
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
                       ],
                     ),
                     child: TextField(
                       controller: _messageController,
                       onSubmitted: (_) => _envoyerMessage(),
-                      decoration: const InputDecoration(
+                      style: TextStyle(color: theme.colorScheme.onSurface),
+                      decoration: InputDecoration(
                         hintText: 'Écrivez votre message...',
                         hintStyle: TextStyle(
-                          color: Color(0xFF6B776D),
+                          color: theme.colorScheme.onSurfaceVariant,
                           fontSize: 15,
                         ),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 13,
-                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
                       ),
                     ),
                   ),
@@ -877,11 +787,7 @@ $lignesZones
                       color: Color(0xFF559B38),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.send,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                    child: const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
                 ),
               ],
@@ -890,8 +796,8 @@ $lignesZones
         ],
       ),
       bottomNavigationBar: NavigationBar(
-        backgroundColor: const Color(0xFFE7EFE6),
-        indicatorColor: const Color(0xFFD6E5D4),
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFE7EFE6),
+        indicatorColor: isDark ? const Color(0xFF3A5A3A) : const Color(0xFFD6E5D4),
         selectedIndex: 0,
         onDestinationSelected: _naviguerBas,
         destinations: [

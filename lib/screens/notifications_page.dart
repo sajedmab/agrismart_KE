@@ -48,26 +48,16 @@ class _NotificationsPageState extends State<NotificationsPage> {
     try {
       if (obj is Map) return obj[name];
       switch (name) {
-        case 'zones':
-          return obj.zones;
-        case 'meteo':
-          return obj.meteo;
-        case 'currentMeteo':
-          return obj.currentMeteo;
-        case 'donnees':
-          return obj.donnees;
-        case 'ville':
-          return obj.ville;
-        case 'city':
-          return obj.city;
-        case 'description':
-          return obj.description;
-        case 'condition':
-          return obj.condition;
-        case 'temperature':
-          return obj.temperature;
-        default:
-          return null;
+        case 'zones': return obj.zones;
+        case 'meteo': return obj.meteo;
+        case 'currentMeteo': return obj.currentMeteo;
+        case 'donnees': return obj.donnees;
+        case 'ville': return obj.ville;
+        case 'city': return obj.city;
+        case 'description': return obj.description;
+        case 'condition': return obj.condition;
+        case 'temperature': return obj.temperature;
+        default: return null;
       }
     } catch (_) {
       return null;
@@ -93,8 +83,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               id: id,
               type: _TypeNotification.critique,
               titre: 'Seuil critique atteint',
-              message:
-              "La parcelle '${zone.nom}' a atteint un niveau d'humidité critique de ${humidite.round()}% (seuil : ${seuil.round()}%).",
+              message: "La parcelle '${zone.nom}' a atteint un niveau d'humidité critique de ${humidite.round()}% (seuil : ${seuil.round()}%).",
               temps: 'Il y a 10 min',
               zoneAssociee: zone,
               dismissible: true,
@@ -109,8 +98,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
               id: id,
               type: _TypeNotification.succes,
               titre: 'Irrigation terminée',
-              message:
-              "L'irrigation automatique de la '${zone.nom}' s'est terminée avec succès. Humidité actuelle : ${humidite.round()}%.",
+              message: "L'irrigation automatique de la '${zone.nom}' s'est terminée avec succès. Humidité actuelle : ${humidite.round()}%.",
               temps: 'Il y a 3 h',
               zoneAssociee: zone,
               dismissible: false,
@@ -143,8 +131,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             id: meteoId,
             type: _TypeNotification.meteo,
             titre: 'Alerte météo - Pluie prévue',
-            message:
-            "Des précipitations sont prévues aujourd'hui à $ville. L'irrigation automatique sera suspendue pour économiser de l'eau.",
+            message: "Des précipitations sont prévues aujourd'hui à $ville. L'irrigation automatique sera suspendue pour économiser de l'eau.",
             temps: 'Il y a 1 h',
             dismissible: false,
           ),
@@ -155,8 +142,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             id: meteoId,
             type: _TypeNotification.meteo,
             titre: 'Suivi météo - $ville',
-            message:
-            "Conditions météo actuelles suivies à $ville. Vérifiez l'humidité des parcelles avant chaque cycle d'irrigation.",
+            message: "Conditions météo actuelles suivies à $ville. Vérifiez l'humidité des parcelles avant chaque cycle d'irrigation.",
             temps: 'Il y a 1 h',
             dismissible: false,
           ),
@@ -204,8 +190,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           id: 'manuel_${DateTime.now().millisecondsSinceEpoch}',
           type: _TypeNotification.critique,
           titre: 'Vérification manuelle requise',
-          message:
-          "Contrôle de vanne et d'humidité programmé sur '$cible'.",
+          message: "Contrôle de vanne et d'humidité programmé sur '$cible'.",
           temps: "À l'instant",
           zoneAssociee: zones.isNotEmpty ? zones.first : null,
           dismissible: true,
@@ -216,6 +201,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     final zonesProvider = context.watch<ZonesProvider>();
     final meteoProvider = context.watch<MeteoProvider>();
 
@@ -224,33 +211,30 @@ class _NotificationsPageState extends State<NotificationsPage> {
     final notifications = _construireNotificationsReelles(zones, meteoProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEDF3EC),
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // الشريط العلوي: AgriSmart + أيقونات اليمين
+            // الشريط العلوي
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 10, 12, 6),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     'AgriSmart',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w500,
-                      color: Color(0xFF1A201C),
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(
-                          Icons.qr_code_scanner,
-                          color: Color(0xFF2D372E),
-                          size: 24,
-                        ),
+                        icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onSurface, size: 24),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Scanner QR')),
@@ -258,11 +242,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         },
                       ),
                       IconButton(
-                        icon: const Icon(
-                          Icons.logout,
-                          color: Color(0xFF2D372E),
-                          size: 24,
-                        ),
+                        icon: Icon(Icons.logout, color: theme.colorScheme.onSurface, size: 24),
                         onPressed: () => Navigator.maybePop(context),
                       ),
                     ],
@@ -272,14 +252,14 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ),
 
             // العنوان الرئيسي للصفحة
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               child: Text(
                 'Notifications & Alertes',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF161B17),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -287,12 +267,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
             // قائمة الكروت
             Expanded(
               child: notifications.isEmpty
-                  ? const Center(
+                  ? Center(
                 child: Text(
                   'Aucune notification active',
                   style: TextStyle(
                     fontSize: 15,
-                    color: Color(0xFF5A655C),
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
               )
@@ -324,7 +304,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF81C778),
+        backgroundColor: const Color(0xFF81C778), // On garde le vert
         foregroundColor: const Color(0xFF142115),
         onPressed: () => _ajouterAlerteManuelle(zones),
         child: const Icon(Icons.add, size: 28),
@@ -344,43 +324,46 @@ class _CarteNotification extends StatelessWidget {
     required this.onTap,
   });
 
-  Color get _bgColor {
-    switch (item.type) {
-      case _TypeNotification.critique:
-        return const Color(0xFFF6E7E7);
-      case _TypeNotification.meteo:
-        return const Color(0xFFE3ECF6);
-      case _TypeNotification.succes:
-        return const Color(0xFFE6F2E5);
-    }
-  }
-
+  // On garde les couleurs d'accent (icône) pour identifier le type
   Color get _accentColor {
     switch (item.type) {
-      case _TypeNotification.critique:
-        return const Color(0xFFC94A38);
-      case _TypeNotification.meteo:
-        return const Color(0xFF4B79A1);
-      case _TypeNotification.succes:
-        return const Color(0xFF4C8C4A);
+      case _TypeNotification.critique: return const Color(0xFFC94A38);
+      case _TypeNotification.meteo: return const Color(0xFF4B79A1);
+      case _TypeNotification.succes: return const Color(0xFF4C8C4A);
     }
   }
 
   IconData get _iconData {
     switch (item.type) {
-      case _TypeNotification.critique:
-        return Icons.warning_rounded;
-      case _TypeNotification.meteo:
-        return Icons.cloud_queue;
-      case _TypeNotification.succes:
-        return Icons.check_circle;
+      case _TypeNotification.critique: return Icons.warning_rounded;
+      case _TypeNotification.meteo: return Icons.cloud_queue;
+      case _TypeNotification.succes: return Icons.check_circle;
+    }
+  }
+
+  // ✅ NOUVEAU : On adapte la couleur de fond de la carte selon le thème
+  Color _getBgColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (isDark) {
+      return const Color(0xFF1E1E1E); // Gris très foncé en mode sombre
+    }
+
+    // Couleurs claires originales pour le mode clair
+    switch (item.type) {
+      case _TypeNotification.critique: return const Color(0xFFF6E7E7);
+      case _TypeNotification.meteo: return const Color(0xFFE3ECF6);
+      case _TypeNotification.succes: return const Color(0xFFE6F2E5);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Material(
-      color: _bgColor,
+      // ✅ Couleur du fond dynamique
+      color: _getBgColor(context),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
@@ -391,11 +374,12 @@ class _CarteNotification extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
+              if (!isDark) // On retire l'ombre en mode sombre
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
             ],
           ),
           child: Column(
@@ -408,10 +392,10 @@ class _CarteNotification extends StatelessWidget {
                   Expanded(
                     child: Text(
                       item.titre,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A201C),
+                        color: theme.colorScheme.onSurface, // ✅ Texte dynamique
                       ),
                     ),
                   ),
@@ -419,38 +403,38 @@ class _CarteNotification extends StatelessWidget {
                     InkWell(
                       onTap: onDismiss,
                       borderRadius: BorderRadius.circular(12),
-                      child: const Padding(
-                        padding: EdgeInsets.all(2),
+                      child: Padding(
+                        padding: const EdgeInsets.all(2),
                         child: Icon(
                           Icons.close,
                           size: 20,
-                          color: Color(0xFF3A433C),
+                          color: theme.colorScheme.onSurfaceVariant, // ✅ Icône dynamique
                         ),
                       ),
                     )
                   else
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
                       size: 22,
-                      color: Color(0xFF3A433C),
+                      color: theme.colorScheme.onSurfaceVariant, // ✅ Icône dynamique
                     ),
                 ],
               ),
               const SizedBox(height: 8),
               Text(
                 item.message,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14.5,
                   height: 1.35,
-                  color: Color(0xFF232B25),
+                  color: theme.colorScheme.onSurface, // ✅ Texte dynamique
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 item.temps,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12.5,
-                  color: Color(0xFF5A655C),
+                  color: theme.colorScheme.onSurfaceVariant, // ✅ Texte dynamique
                 ),
               ),
             ],
