@@ -1,7 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:intl/date_symbol_data_local.dart'; // 1. استيراد مكتبة تهيئة التواريخ
 
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
@@ -19,6 +19,9 @@ Future<void> main() async {
 
   // Initialisation de Firebase
   await Firebase.initializeApp();
+
+  // 2. تهيئة تنسيق التواريخ باللغة الفرنسية لمنع ظهور خطأ LocaleDataException
+  await initializeDateFormatting('fr_FR', null);
 
   // Utilisation de Firebase Authentication
   final AuthService authService = FirebaseAuthService();

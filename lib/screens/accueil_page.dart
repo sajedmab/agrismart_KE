@@ -5,12 +5,15 @@ import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/meteo_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
 import 'package:agrismart/screens/assistant_ia_page.dart';
+import 'package:agrismart/screens/export_rapports_page.dart';
 import 'package:agrismart/screens/notifications_page.dart';
 import 'package:agrismart/screens/zone_detail_page.dart';
 import 'package:agrismart/screens/zone_form_page.dart';
 import 'package:agrismart/screens/ScannerEtiquettePage.dart';
 import 'package:agrismart/screens/diagnostic_plante_page.dart';
-import 'package:agrismart/screens/harvest_calendar_page.dart';
+import 'package:agrismart/screens/taches_a_venir_page.dart';
+import 'package:agrismart/screens/equipements_page.dart';
+import 'package:agrismart/screens/journal_activites_page.dart'; // تمت إضافة استيراد صفحة Journal d'activités هنا
 
 class AccueilPage extends StatefulWidget {
   final VoidCallback? onAllerZones;
@@ -211,13 +214,81 @@ return temp.contains('°') ? temp.trim() : '${temp.trim()}°C';
 return '--°C';
 }
 
-IconData _iconeMeteo(MeteoProvider meteoProvider) {
-final dynamic data = _extractMeteoData(meteoProvider);
-final desc = (_tryProperty(data, 'description') ??
-_tryProperty(data, 'condition') ??
-'')
-.toString()
-.toLowerCase();
+  Future<void> _ouvrirRapports() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ExportRapportsPage(),
+      ),
+    );
+  }
+
+  // ربط زر Tâches à venir بالصفحة الخاصة بها
+  Future<void> _ouvrirTachesAVenir() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TachesAVenirPage(
+          onNavigate: (index) {
+            Navigator.pop(context);
+            if (index == 0 && widget.onAllerZones != null) {
+              widget.onAllerZones!();
+            } else if (index == 1 && widget.onAllerStatistiques != null) {
+              widget.onAllerStatistiques!();
+            } else if (index == 2 && widget.onAllerProfil != null) {
+              widget.onAllerProfil!();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  // ربط زر Équipements بصفحة الأجهزة الجديدة
+  Future<void> _ouvrirEquipements() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EquipementsPage(
+          onNavigate: (index) {
+            Navigator.pop(context);
+            if (index == 0 && widget.onAllerZones != null) {
+              widget.onAllerZones!();
+            } else if (index == 1 && widget.onAllerStatistiques != null) {
+              widget.onAllerStatistiques!();
+            } else if (index == 2 && widget.onAllerProfil != null) {
+              widget.onAllerProfil!();
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  // ربط زر Journal d'activités بصفحة الأنشطة الحقيقية
+  Future<void> _ouvrirJournalActivites() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const JournalActivitesPage(),
+      ),
+    );
+  }
+
+  Future<void> _ouvrirNotifications() async {
+    if (widget.onOuvrirNotifications != null) {
+      widget.onOuvrirNotifications!();
+      return;
+    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NotificationsPage(
+          onAllerZones: widget.onAllerZones,
+        ),
+      ),
+    );
+  }
 
 if (desc.contains('pluie') || desc.contains('rain')) {
 return Icons.grain;
@@ -550,53 +621,89 @@ Widget build(BuildContext context) {
                       MaterialPageRoute(
                         builder: (_) => const HarvestCalendarPage(),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
 
-                _BoutonVert(
-                  icon: Icons.menu_book,
-                  label: "Journal d'activités",
-                  onTap: () => _afficherMessage("Journal d'activités"),
-                ),
-                _BoutonVert(
-                  icon: Icons.description,
-                  label: 'Guides & Rapports',
-                  onTap: widget.onAllerStatistiques ??
-                          () => _afficherMessage('Guides & Rapports'),
-                ),
-                _BoutonVert(
-                  icon: Icons.shopping_basket,
-                  label: 'Tâches à venir',
-                  subtitle: 'Récolte Tomates (5j)',
-                  onTap: () => _afficherMessage('Tâches à venir'),
-                ),
-                _BoutonVert(
-                  icon: Icons.notifications,
-                  label: 'Notifications & Alertes',
-                  subtitle: zonesAIrriguer > 0
-                      ? '$zonesAIrriguer parcelle(s) à irriguer'
-                      : 'Aucune alerte',
-                  badgeCount: zonesAIrriguer > 0 ? zonesAIrriguer : null,
-                  onTap: _ouvrirNotifications,
-                ),
-                _BoutonVert(
-                  icon: Icons.water_drop,
-                  label: 'Détails Parcelle',
-                  subtitle: detailSubtitle,
-                  onTap: () {
-                    if (zoneCible != null) {
-                      _ouvrirDetail(zones, zoneCible);
-                    } else if (widget.onAllerZones != null) {
-                      widget.onAllerZones!();
-                    } else {
-                      _afficherMessage('Aucune parcelle disponible');
-                    }
-                  },
-                ),
-              ],
-            ),
-          ],
+              // 4. Grille des cartes vertes
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                mainAxisSpacing: 10,
+                crossAxisSpacing: 10,
+                childAspectRatio: 1.52,
+                children: [
+                  _BoutonVert(
+                    icon: Icons.smart_toy,
+                    label: 'Assistant IA',
+                    onTap: () => _ouvrirAssistantIa(zoneCible),
+                  ),
+                  _BoutonVert(
+                    icon: Icons.qr_code_scanner,
+                    label: 'Scanner Étiquette',
+                    onTap: _scannerEtiquette,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.local_florist,
+                    label: 'Diagnostic de plante',
+                    onTap: _diagnosticPlante,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.build,
+                    label: 'Équipements',
+                    onTap: _ouvrirEquipements,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.calendar_today,
+                    label: 'Calendrier',
+                    onTap: () => _afficherMessage('Calendrier'),
+                  ),
+                  _BoutonVert(
+                    icon: Icons.menu_book,
+                    label: "Journal d'activités",
+                    onTap: _ouvrirJournalActivites, // تم ربط زر Journal d'activités بصفحته الحقيقية
+                  ),
+                  _BoutonVert(
+                    icon: Icons.description,
+                    label: 'Guides & Rapports',
+                    onTap: _ouvrirRapports,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.shopping_basket,
+                    label: 'Tâches à venir',
+                    subtitle: 'Récolte Tomates (5j)',
+                    onTap: _ouvrirTachesAVenir,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.notifications,
+                    label: 'Notifications & Alertes',
+                    subtitle: zonesAIrriguer > 0
+                        ? '$zonesAIrriguer parcelle(s) à irriguer'
+                        : 'Aucune alerte',
+                    badgeCount: zonesAIrriguer > 0 ? zonesAIrriguer : null,
+                    onTap: _ouvrirNotifications,
+                  ),
+                  _BoutonVert(
+                    icon: Icons.water_drop,
+                    label: 'Détails Parcelle',
+                    subtitle: detailSubtitle,
+                    onTap: () {
+                      if (zoneCible != null) {
+                        _ouvrirDetail(zones, zoneCible);
+                      } else if (widget.onAllerZones != null) {
+                        widget.onAllerZones!();
+                      } else {
+                        _afficherMessage('Aucune parcelle disponible');
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     ),
