@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:intl/date_symbol_data_local.dart'; // 1. استيراد مكتبة تهيئة التواريخ
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:agrismart/providers/auth_provider.dart';
+import 'package:agrismart/providers/reglages_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
 import 'package:agrismart/providers/meteo_provider.dart';
 
@@ -11,37 +13,33 @@ import 'package:agrismart/screens/auth_gate.dart';
 
 import 'package:agrismart/services/auth_service.dart';
 import 'package:agrismart/services/firebase_auth_service.dart';
-
 import 'package:agrismart/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialisation de Firebase
   await Firebase.initializeApp();
-
-  // 2. تهيئة تنسيق التواريخ باللغة الفرنسية لمنع ظهور خطأ LocaleDataException
   await initializeDateFormatting('fr_FR', null);
 
-  // Utilisation de Firebase Authentication
   final AuthService authService = FirebaseAuthService();
+
+  // Ouverture unique du stockage local
+  final prefs = await SharedPreferences.getInstance();
 
   runApp(
     MultiProvider(
       providers: [
-        // Authentification Firebase
+        ChangeNotifierProvider(create: (_) => AuthProvider(authService)),
+        ChangeNotifierProvider(create: (_) => ReglagesProvider(prefs)),
+
+        // ZonesProvider reçoit prefs ET auth
         ChangeNotifierProvider(
-          create: (_) => AuthProvider(authService),
+          create: (context) => ZonesProvider(prefs, context.read<AuthProvider>()),
         ),
 
-        // Gestion des zones agricoles
+        // MeteoProvider reçoit prefs
         ChangeNotifierProvider(
-          create: (_) => ZonesProvider(),
-        ),
-
-        // Gestion de la météo
-        ChangeNotifierProvider(
-          create: (_) => MeteoProvider()..charger(),
+          create: (_) => MeteoProvider(prefs)..charger(),
         ),
       ],
       child: const AgriSmartApp(),
@@ -58,7 +56,7 @@ class AgriSmartApp extends StatelessWidget {
       title: 'AgriSmart',
       theme: AppTheme.clair(),
       darkTheme: AppTheme.sombre(),
-      themeMode: ThemeMode.system,
+      themeMode: context.watch<ReglagesProvider>().themeMode,
       home: const AuthGate(),
       debugShowCheckedModeBanner: false,
     );
