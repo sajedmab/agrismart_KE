@@ -32,7 +32,7 @@ class EquipementsPage extends StatefulWidget {
 }
 
 class _EquipementsPageState extends State<EquipementsPage> {
-  int _selectedIndex = 0; // Accueil يأخذ Index 0
+  int _selectedIndex = 0;
 
   final List<EquipmentItem> _equipments = [
     EquipmentItem(
@@ -72,11 +72,16 @@ class _EquipementsPageState extends State<EquipementsPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFF3F7F2),
+        // ✅ Fond de l'alerte dynamique
+        backgroundColor: Theme.of(context).colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Ajouter un équipement',
-          style: TextStyle(color: Color(0xFF283D27), fontWeight: FontWeight.bold),
+          // ✅ Texte dynamique
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -101,11 +106,14 @@ class _EquipementsPageState extends State<EquipementsPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+            child: Text(
+              'Annuler',
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF93E28C),
+              backgroundColor: const Color(0xFF93E28C), // On garde le vert
               foregroundColor: const Color(0xFF283D27),
             ),
             onPressed: () {
@@ -135,8 +143,13 @@ class _EquipementsPageState extends State<EquipementsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Récupération du thème actuel
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE3ECE1),
+      // ✅ Fond dynamique (blanc cassé en clair, noir en sombre)
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,16 +163,17 @@ class _EquipementsPageState extends State<EquipementsPage> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF283D27), size: 28),
+                        // ✅ Icône dynamique
+                        icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface, size: 28),
                         onPressed: () => Navigator.pop(context),
                       ),
                       const SizedBox(width: 4),
-                      const Text(
+                      Text(
                         'AgriSmart',
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF283D27),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                     ],
@@ -167,12 +181,12 @@ class _EquipementsPageState extends State<EquipementsPage> {
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF283D27), size: 28),
+                        icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onSurface, size: 28),
                         onPressed: () {},
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        icon: const Icon(Icons.logout, color: Color(0xFF283D27), size: 28),
+                        icon: Icon(Icons.logout, color: theme.colorScheme.onSurface, size: 28),
                         onPressed: () {},
                       ),
                     ],
@@ -182,14 +196,14 @@ class _EquipementsPageState extends State<EquipementsPage> {
             ),
 
             // عنوان الصفحة
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Text(
                 'AgriSmart – Équipements',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF283D27),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -209,14 +223,16 @@ class _EquipementsPageState extends State<EquipementsPage> {
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F7F2),
+                          // ✅ Fond de la carte dynamique
+                          color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
+                            if (!isDark)
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
                           ],
                         ),
                         child: Row(
@@ -228,26 +244,26 @@ class _EquipementsPageState extends State<EquipementsPage> {
                                 children: [
                                   Text(
                                     eq.name,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.w600,
-                                      color: Color(0xFF283D27),
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     eq.type,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
-                                      color: Color(0xFF4E5B4D),
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
                                     eq.statusInfo,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 13,
-                                      color: Color(0xFF6B7C69),
+                                      color: theme.colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 8),
@@ -256,7 +272,7 @@ class _EquipementsPageState extends State<EquipementsPage> {
                                       const Text(
                                         'En ligne ',
                                         style: TextStyle(
-                                          color: Color(0xFF4C8046),
+                                          color: Color(0xFF4C8046), // Le vert reste le même
                                           fontSize: 13,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -291,13 +307,13 @@ class _EquipementsPageState extends State<EquipementsPage> {
                                 )
                                     : Column(
                                   children: [
-                                    const Icon(Icons.battery_full, color: Color(0xFF4E5B4D), size: 26),
+                                    Icon(Icons.battery_full, color: theme.colorScheme.onSurfaceVariant, size: 26),
                                     Text(
                                       eq.batteryOrState,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFF4E5B4D),
+                                        color: theme.colorScheme.onSurfaceVariant,
                                       ),
                                     ),
                                   ],
@@ -310,7 +326,8 @@ class _EquipementsPageState extends State<EquipementsPage> {
                                       width: 4,
                                       height: 6.0 + (i * 4),
                                       decoration: BoxDecoration(
-                                        color: i < 3 ? const Color(0xFF283D27) : Colors.grey.shade400,
+                                        // ✅ La couleur des barres de signal s'adapte
+                                        color: i < 3 ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant.withOpacity(0.3),
                                         borderRadius: BorderRadius.circular(2),
                                       ),
                                     );
@@ -345,11 +362,12 @@ class _EquipementsPageState extends State<EquipementsPage> {
         ),
       ),
 
-      // شريط التنقل السفلي (Navbar) مع إضافة تبويب Accueil
+      // شريط التنقل السفلي (Navbar)
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3F7F2),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          // ✅ Fond de la navbar dynamique
+          color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: NavigationBar(
           height: 70,
@@ -365,32 +383,32 @@ class _EquipementsPageState extends State<EquipementsPage> {
             }
           },
           destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.home, color: Color(0xFF283D27)),
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined, color: theme.colorScheme.onSurfaceVariant),
+              selectedIcon: Icon(Icons.home, color: theme.colorScheme.onSurface),
               label: 'Accueil',
             ),
             NavigationDestination(
               icon: Badge(
                 label: const Text('3'),
                 backgroundColor: const Color(0xFF962D2D),
-                child: const Icon(Icons.grass_outlined, color: Color(0xFF283D27)),
+                child: Icon(Icons.grass_outlined, color: theme.colorScheme.onSurface),
               ),
               selectedIcon: Badge(
                 label: const Text('3'),
                 backgroundColor: const Color(0xFF962D2D),
-                child: const Icon(Icons.grass, color: Color(0xFF283D27)),
+                child: Icon(Icons.grass, color: theme.colorScheme.onSurface),
               ),
               label: 'Zones',
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.bar_chart_rounded, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.bar_chart, color: Color(0xFF283D27)),
+            NavigationDestination(
+              icon: Icon(Icons.bar_chart_rounded, color: theme.colorScheme.onSurfaceVariant),
+              selectedIcon: Icon(Icons.bar_chart, color: theme.colorScheme.onSurface),
               label: 'Statistiques',
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.person_outline, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.person, color: Color(0xFF283D27)),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline, color: theme.colorScheme.onSurfaceVariant),
+              selectedIcon: Icon(Icons.person, color: theme.colorScheme.onSurface),
               label: 'Profil',
             ),
           ],

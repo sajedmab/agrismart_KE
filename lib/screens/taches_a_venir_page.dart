@@ -62,23 +62,29 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
   }
 
   void _showAddTaskDialog() {
+    final theme = Theme.of(context);
     final titleController = TextEditingController();
     final delayController = TextEditingController(text: 'Dans 3 jours');
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFFF3F7F2),
+        // ✅ Fond de l'alerte dynamique
+        backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text(
+        title: Text(
           'Nouvelle tâche à venir',
-          style: TextStyle(color: Color(0xFF283D27), fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 labelText: 'Titre (ex: Arrosage)',
                 border: OutlineInputBorder(),
@@ -87,6 +93,7 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
             const SizedBox(height: 12),
             TextField(
               controller: delayController,
+              style: TextStyle(color: theme.colorScheme.onSurface),
               decoration: const InputDecoration(
                 labelText: 'Échéance (ex: Dans 3 jours)',
                 border: OutlineInputBorder(),
@@ -97,7 +104,7 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+            child: Text('Annuler', style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -129,8 +136,13 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Récupération du thème
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFFE3ECE1),
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,18 +153,18 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Color(0xFF283D27), size: 28),
+                    icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface, size: 28),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Row(
                     children: [
                       IconButton(
-                        icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF283D27), size: 28),
+                        icon: Icon(Icons.qr_code_scanner, color: theme.colorScheme.onSurface, size: 28),
                         onPressed: () {},
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        icon: const Icon(Icons.logout, color: Color(0xFF283D27), size: 28),
+                        icon: Icon(Icons.logout, color: theme.colorScheme.onSurface, size: 28),
                         onPressed: () {},
                       ),
                     ],
@@ -160,14 +172,14 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
               child: Text(
                 'Tâches à venir',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF283D27),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -177,14 +189,16 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF3F7F2),
+                  // ✅ Fond de la carte calendrier
+                  color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.08),
-                      blurRadius: 15,
-                      offset: const Offset(0, 6),
-                    ),
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.08),
+                        blurRadius: 15,
+                        offset: const Offset(0, 6),
+                      ),
                   ],
                 ),
                 child: Column(
@@ -196,10 +210,10 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                         children: [
                           Text(
                             _capitalize(DateFormat('MMMM yyyy', 'fr_FR').format(_focusedDay)),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w500,
-                              color: Color(0xFF283D27),
+                              color: theme.colorScheme.onSurface,
                             ),
                           ),
                           Row(
@@ -210,9 +224,9 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                                     _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
                                   });
                                 },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(6.0),
-                                  child: Icon(Icons.chevron_left, color: Colors.grey),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6.0),
+                                  child: Icon(Icons.chevron_left, color: theme.colorScheme.onSurfaceVariant),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -222,9 +236,9 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                                     _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
                                   });
                                 },
-                                child: const Padding(
-                                  padding: EdgeInsets.all(6.0),
-                                  child: Icon(Icons.chevron_right, color: Color(0xFF283D27)),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(6.0),
+                                  child: Icon(Icons.chevron_right, color: theme.colorScheme.onSurface),
                                 ),
                               ),
                             ],
@@ -247,16 +261,25 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                           _focusedDay = focusedDay;
                         });
                       },
-                      daysOfWeekStyle: const DaysOfWeekStyle(
-                        weekdayStyle: TextStyle(color: Color(0xFF283D27), fontWeight: FontWeight.w500),
-                        weekendStyle: TextStyle(color: Color(0xFF283D27), fontWeight: FontWeight.w500),
+                      daysOfWeekStyle: DaysOfWeekStyle(
+                        weekdayStyle: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        weekendStyle: TextStyle(
+                          color: theme.colorScheme.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                       calendarBuilders: CalendarBuilders(
-                        defaultBuilder: (context, day, focusedDay) => _buildDayCell(day),
-                        selectedBuilder: (context, day, focusedDay) => _buildDayCell(day),
-                        todayBuilder: (context, day, focusedDay) => _buildDayCell(day),
+                        defaultBuilder: (context, day, focusedDay) => _buildDayCell(day, theme),
+                        selectedBuilder: (context, day, focusedDay) => _buildDayCell(day, theme),
+                        todayBuilder: (context, day, focusedDay) => _buildDayCell(day, theme),
                         outsideBuilder: (context, day, focusedDay) => Center(
-                          child: Text('${day.day}', style: const TextStyle(color: Colors.grey, fontSize: 16)),
+                          child: Text(
+                            '${day.day}',
+                            style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 16),
+                          ),
                         ),
                       ),
                     ),
@@ -265,14 +288,14 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
               ),
             ),
             const SizedBox(height: 24),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Text(
                 'Tâches à venir',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w500,
-                  color: Color(0xFF283D27),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
@@ -289,20 +312,22 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                         margin: const EdgeInsets.only(bottom: 14),
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF3F7F2),
+                          // ✅ Fond de la carte de tâche
+                          color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
-                            ),
+                            if (!isDark)
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
                           ],
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Icon(task.icon, size: 36, color: const Color(0xFF283D27)),
+                            Icon(task.icon, size: 36, color: theme.colorScheme.onSurface),
                             const SizedBox(width: 16),
                             Expanded(
                               child: Column(
@@ -310,10 +335,10 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                                 children: [
                                   Text(
                                     task.title,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 17,
                                       fontWeight: FontWeight.w500,
-                                      color: Color(0xFF283D27),
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -321,13 +346,14 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                                       ? Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFD6E6D2),
+                                      // ✅ Couleur du badge dynamique
+                                      color: isDark ? const Color(0xFF3A5A3A) : const Color(0xFFD6E6D2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       task.badgeText,
-                                      style: const TextStyle(
-                                        color: Color(0xFF4C8046),
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white70 : const Color(0xFF4C8046),
                                         fontSize: 14,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -337,8 +363,8 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
                                     alignment: Alignment.centerRight,
                                     child: Text(
                                       task.badgeText,
-                                      style: const TextStyle(
-                                        color: Color(0xFF4C8046),
+                                      style: TextStyle(
+                                        color: isDark ? Colors.white70 : const Color(0xFF4C8046),
                                         fontSize: 15,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -374,14 +400,15 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
         ),
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFFF3F7F2),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        decoration: BoxDecoration(
+          // ✅ Fond de la navbar
+          color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         child: NavigationBar(
           height: 70,
           backgroundColor: Colors.transparent,
-          indicatorColor: const Color(0xFFD6E6D2),
+          indicatorColor: isDark ? const Color(0xFF3A5A3A) : const Color(0xFFD6E6D2),
           selectedIndex: _selectedIndex,
           onDestinationSelected: (index) {
             setState(() {
@@ -392,32 +419,32 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
             }
           },
           destinations: [
-            const NavigationDestination(
-              icon: Icon(Icons.home_outlined, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.home, color: Color(0xFF283D27)),
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined, color: theme.colorScheme.onSurfaceVariant),
+              selectedIcon: Icon(Icons.home, color: theme.colorScheme.onSurface),
               label: 'Accueil',
             ),
             NavigationDestination(
               icon: Badge(
                 label: Text('${_upcomingTasks.length}'),
                 backgroundColor: const Color(0xFF962D2D),
-                child: const Icon(Icons.grass_outlined, color: Color(0xFF283D27)),
+                child: Icon(Icons.grass_outlined, color: theme.colorScheme.onSurface),
               ),
               selectedIcon: Badge(
                 label: Text('${_upcomingTasks.length}'),
                 backgroundColor: const Color(0xFF962D2D),
-                child: const Icon(Icons.grass, color: Color(0xFF283D27)),
+                child: Icon(Icons.grass, color: theme.colorScheme.onSurface),
               ),
               label: 'Zones',
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.bar_chart_rounded, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.bar_chart, color: Color(0xFF283D27)),
+            NavigationDestination(
+              icon: Icon(Icons.bar_chart_rounded, color: theme.colorScheme.onSurfaceVariant),
+              selectedIcon: Icon(Icons.bar_chart, color: theme.colorScheme.onSurface),
               label: 'Statistiques',
             ),
-            const NavigationDestination(
-              icon: Icon(Icons.person_outline, color: Color(0xFF4E5B4D)),
-              selectedIcon: Icon(Icons.person, color: Color(0xFF283D27)),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline, color: theme.colorScheme.onSurfaceVariant),
+              selectedIcon: Icon(Icons.person, color: theme.colorScheme.onSurface),
               label: 'Profil',
             ),
           ],
@@ -426,10 +453,11 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
     );
   }
 
-  Widget _buildDayCell(DateTime day) {
+  Widget _buildDayCell(DateTime day, ThemeData theme) {
     final isMarked = _isHighlightedDay(day);
     final isSelected = isSameDay(day, _selectedDay);
     final hasCircle = isMarked && day.day != 26;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Center(
       child: Stack(
@@ -440,15 +468,18 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: (hasCircle || isSelected) ? const Color(0xFFBDD8B8) : Colors.transparent,
+              // ✅ Couleur de sélection dynamique
+              color: (hasCircle || isSelected)
+                  ? (isDark ? const Color(0xFF3A5A3A) : const Color(0xFFBDD8B8))
+                  : Colors.transparent,
               shape: BoxShape.circle,
             ),
             alignment: Alignment.center,
             child: Text(
               '${day.day}',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: Color(0xFF283D27),
+                color: theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -459,8 +490,8 @@ class _TachesAVenirPageState extends State<TachesAVenirPage> {
               child: Container(
                 width: 7,
                 height: 7,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF568B50),
+                decoration: BoxDecoration(
+                  color: isDark ? Colors.white54 : const Color(0xFF568B50),
                   shape: BoxShape.circle,
                 ),
               ),

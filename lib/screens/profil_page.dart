@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:agrismart/providers/auth_provider.dart';
 import 'package:agrismart/providers/zones_provider.dart';
-import 'package:agrismart/providers/reglages_provider.dart'; // 1. Import ajouté
+import 'package:agrismart/providers/reglages_provider.dart';
 
 class ProfilPage extends StatefulWidget {
   const ProfilPage({super.key});
@@ -71,54 +71,6 @@ class _ProfilPageState extends State<ProfilPage> {
             ),
             const SizedBox(height: 4),
             SelectableText(uid),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Fermer'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _afficherQR(String uid) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('My QR Code'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.black12),
-              ),
-              child: const Icon(
-                Icons.qr_code_2,
-                size: 110,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'QR Code غير مفعّل حاليًا',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'معرّف حسابك:',
-              style: TextStyle(color: Colors.grey),
-            ),
-            SelectableText(
-              uid,
-              textAlign: TextAlign.center,
-            ),
           ],
         ),
         actions: [
@@ -206,7 +158,7 @@ class _ProfilPageState extends State<ProfilPage> {
           (provider) => provider.nombre,
     );
 
-    // 2. Lecture du thème actuel
+    // Lecture du thème actuel
     final themeMode = context.select<ReglagesProvider, ThemeMode>(
           (r) => r.themeMode,
     );
@@ -295,13 +247,6 @@ class _ProfilPageState extends State<ProfilPage> {
             onTap: () => _afficherInformations(email, uid),
           ),
 
-          _option(
-            icon: Icons.qr_code_2,
-            titre: 'QR Codes',
-            sousTitre: 'Consulter votre identifiant',
-            onTap: () => _afficherQR(uid),
-          ),
-
           _sectionTitre('PREFERENCES'),
 
           _option(
@@ -315,30 +260,9 @@ class _ProfilPageState extends State<ProfilPage> {
             ),
           ),
 
-          _option(
-            icon: Icons.notifications_outlined,
-            titre: 'Notifications',
-            sousTitre: 'Alertes et notifications',
-            onTap: () => _afficherMessage(
-              'Notifications',
-              'Vous pouvez consulter vos alertes depuis '
-                  'l’icône de notification en haut de l’application.',
-            ),
-          ),
-
-          _option(
-            icon: Icons.face_retouching_natural,
-            titre: 'Face Authentication',
-            sousTitre: 'Authentification faciale',
-            onTap: () => _afficherMessage(
-              'Face Authentication',
-              'Cette fonctionnalité n’est pas encore activée.',
-            ),
-          ),
-
           _sectionTitre('SESSION'),
 
-          // 3. Widgets du sélecteur de thème ajoutés ici
+          // Sélecteur de thème
           const ListTile(
             leading: Icon(Icons.brightness_6),
             title: Text('Thème'),
@@ -358,7 +282,6 @@ class _ProfilPageState extends State<ProfilPage> {
             ),
           ),
           const SizedBox(height: 8),
-          // --------------------------------------------
 
           Card(
             elevation: 0,

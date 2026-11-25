@@ -255,6 +255,10 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Récupération du thème
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final zonesProvider = context.watch<ZonesProvider>();
     final zone = _zoneReelle(zonesProvider);
     final int aIrriguer = _lireNombreAIrriguer(zonesProvider, zone);
@@ -266,19 +270,20 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
     zone.culture.isNotEmpty ? zone.culture.substring(0, sigleLen) : 'Z';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE7EFE6),
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFE7EFE6),
+        backgroundColor: theme.scaffoldBackgroundColor,
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1A221B)),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context, zone),
         ),
         title: Text(
           '${zone.nom} - Détails',
-          style: const TextStyle(
-            color: Color(0xFF1A221B),
+          style: TextStyle(
+            color: theme.colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w500,
           ),
@@ -286,7 +291,7 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
         actions: [
           IconButton(
             tooltip: 'Modifier',
-            icon: const Icon(Icons.edit_outlined, color: Color(0xFF1A221B)),
+            icon: Icon(Icons.edit_outlined, color: theme.colorScheme.onSurface),
             onPressed: () => _modifierZoneReal(zone),
           ),
         ],
@@ -294,17 +299,20 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
         children: [
+          // ----------- CARTE D'INFORMATION PRINCIPALE -----------
           Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F8F2),
+              // ✅ Fond de la carte
+              color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.06),
-                  blurRadius: 10,
-                  offset: const Offset(0, 3),
-                ),
+                if (!isDark)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
               ],
             ),
             child: Row(
@@ -316,27 +324,27 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                     children: [
                       Text(
                         zone.nom,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 21,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A221B),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'Culture : ${zone.culture}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
-                          color: Color(0xFF3F4B41),
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'Humidité actuelle : ${zone.humidite.toStringAsFixed(1)}%',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18.5,
                           fontWeight: FontWeight.w500,
-                          color: Color(0xFF1A221B),
+                          color: theme.colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -383,11 +391,12 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                 const SizedBox(width: 12),
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: const Color(0xFFDDE8DC),
+                  // ✅ Fond de l'avatar dynamique
+                  backgroundColor: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFDDE8DC),
                   child: Text(
                     sigle,
-                    style: const TextStyle(
-                      color: Color(0xFF2E4E32),
+                    style: TextStyle(
+                      color: isDark ? Colors.white70 : const Color(0xFF2E4E32),
                       fontWeight: FontWeight.w600,
                       fontSize: 14,
                     ),
@@ -397,6 +406,7 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 16),
+          // ----------- BOUTON D'IRRIGATION -----------
           SizedBox(
             width: double.infinity,
             height: 54,
@@ -437,35 +447,38 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 14),
+          // ----------- IRRIGATION AUTOMATIQUE -----------
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F8F2),
+              color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Irrigation automatique',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w500,
-                        color: Color(0xFF1A221B),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Irrigation automatique',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w500,
+                          color: theme.colorScheme.onSurface,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      "(Seuil d'irrigation : ${zone.seuil.toStringAsFixed(1)}%)",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF3F4B41),
+                      const SizedBox(height: 2),
+                      Text(
+                        "(Seuil d'irrigation : ${zone.seuil.toStringAsFixed(1)}%)",
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Switch(
                   value: _irrigationAuto,
@@ -477,31 +490,32 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          // ----------- PLANIFICATION -----------
+          Text(
             "Planification de l'irrigation",
             style: TextStyle(
               fontSize: 18.5,
               fontWeight: FontWeight.w500,
-              color: Color(0xFF1A221B),
+              color: theme.colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F8F2),
+              color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
               borderRadius: BorderRadius.circular(18),
             ),
             child: Row(
               children: [
-                const Icon(Icons.access_time, size: 20, color: Color(0xFF3A473C)),
+                Icon(Icons.access_time, size: 20, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 8),
-                const Text(
+                Text(
                   "Horaires d'irrigation",
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w500,
-                    color: Color(0xFF1A221B),
+                    color: theme.colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(width: 10),
@@ -522,14 +536,15 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
+                                // ✅ Couleur de sélection dynamique
                                 color: sel
-                                    ? const Color(0xFFE6F1E4)
-                                    : const Color(0xFFF7FAF6),
+                                    ? (isDark ? const Color(0xFF2E4E32) : const Color(0xFFE6F1E4))
+                                    : (isDark ? const Color(0xFF2C2C2C) : const Color(0xFFF7FAF6)),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: sel
                                       ? const Color(0xFF47883A)
-                                      : const Color(0xFFD0DBD0),
+                                      : (isDark ? Colors.white24 : const Color(0xFFD0DBD0)),
                                   width: sel ? 1.8 : 1.0,
                                 ),
                               ),
@@ -537,9 +552,8 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                                 h,
                                 style: TextStyle(
                                   fontSize: 14.5,
-                                  fontWeight:
-                                  sel ? FontWeight.w600 : FontWeight.w400,
-                                  color: const Color(0xFF1A221B),
+                                  fontWeight: sel ? FontWeight.w600 : FontWeight.w400,
+                                  color: theme.colorScheme.onSurface,
                                 ),
                               ),
                             ),
@@ -553,15 +567,20 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
             ),
           ),
           const SizedBox(height: 20),
+          // ----------- HISTORIQUE -----------
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Historique des irrigations',
-                style: TextStyle(
-                  fontSize: 18.5,
-                  fontWeight: FontWeight.w500,
-                  color: Color(0xFF1A221B),
+              // Expanded : le titre se réduit au lieu de déborder (bande jaune)
+              Expanded(
+                child: Text(
+                  'Historique des irrigations',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18.5,
+                    fontWeight: FontWeight.w500,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
               ),
               TextButton.icon(
@@ -591,7 +610,7 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                 return Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F8F2),
+                    color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Text(
@@ -606,12 +625,15 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                 return Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF3F8F2),
+                    color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Aucune irrigation enregistrée dans Firebase.',
-                    style: TextStyle(fontSize: 14.5, color: Color(0xFF4B5563)),
+                    style: TextStyle(
+                      fontSize: 14.5,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               }
@@ -631,7 +653,7 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3F8F2),
+                        color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F8F2),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -645,9 +667,9 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
                           Expanded(
                             child: Text(
                               texte,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
-                                color: Color(0xFF1F2820),
+                                color: theme.colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -662,6 +684,8 @@ class _ZoneDetailPageState extends State<ZoneDetailPage> {
         ],
       ),
       bottomNavigationBar: NavigationBar(
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : null,
+        indicatorColor: isDark ? const Color(0xFF3A5A3A) : null,
         selectedIndex: 1,
         onDestinationSelected: _naviguerVersBas,
         destinations: [
@@ -705,15 +729,22 @@ class _BadgeInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFDCE7DA),
+        // ✅ Fond du badge dynamique
+        color: isDark ? const Color(0xFF2C2C2C) : const Color(0xFFDCE7DA),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
         texte,
-        style: const TextStyle(fontSize: 13, color: Color(0xFF354237)),
+        style: TextStyle(
+          fontSize: 13,
+          color: isDark ? Colors.white70 : const Color(0xFF354237),
+        ),
       ),
     );
   }

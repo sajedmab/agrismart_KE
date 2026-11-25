@@ -26,7 +26,7 @@ class JournalActivitesPage extends StatefulWidget {
 }
 
 class _JournalActivitesPageState extends State<JournalActivitesPage> {
-  int _selectedIndex = 0; // مؤشر الـ Navbar الافتراضي (مثلاً Accueil أو حسب الاختيار)
+  int _selectedIndex = 0;
   final TextEditingController _noteController = TextEditingController();
 
   final List<ActiviteItem> _activites = [
@@ -50,6 +50,12 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
     ),
   ];
 
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
   void _ajouterNote() {
     if (_noteController.text.trim().isNotEmpty) {
       setState(() {
@@ -72,85 +78,87 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
 
   @override
   Widget build(BuildContext context) {
+    // ✅ Récupération du thème
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final zonesProvider = context.watch<ZonesProvider>();
     final zones = zonesProvider.zones;
     final nomParcelle = zones.isNotEmpty ? zones.first.nom : 'Parcelle Nord';
-    final aIrriguer = zonesProvider.nombreAirriguer;
+    final aIrriguer = zones.where((z) => z.besoinIrrigation).length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE3ECE1),
+      // ✅ Fond dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. الشريط العلوي
+            // 1. Barre supérieure
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back, color: Color(0xFF283D27), size: 28),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const SizedBox(width: 4),
-                      const Text(
-                        'Journal des activités',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF283D27),
-                        ),
-                      ),
-                    ],
+                  IconButton(
+                    icon: Icon(Icons.arrow_back,
+                        color: theme.colorScheme.onSurface, size: 28),
+                    onPressed: () => Navigator.pop(context),
                   ),
-                  Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.qr_code_scanner, color: Color(0xFF283D27), size: 26),
-                        onPressed: () {},
+                  // ✅ Expanded + ellipsis : le titre se réduit au lieu de déborder
+                  Expanded(
+                    child: Text(
+                      'Journal des activités',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.onSurface,
                       ),
-                      const SizedBox(width: 4),
-                      IconButton(
-                        icon: const Icon(Icons.logout, color: Color(0xFF283D27), size: 26),
-                        onPressed: () {},
-                      ),
-                    ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.qr_code_scanner,
+                        color: theme.colorScheme.onSurface, size: 26),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.logout,
+                        color: theme.colorScheme.onSurface, size: 26),
+                    onPressed: () {},
                   ),
                 ],
               ),
             ),
 
-            // 2. عنوان Parcelle الحقيقي
+            // 2. Titre Parcelle
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
               child: Text(
                 '$nomParcelle - Activités',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF283D27),
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
             ),
 
             const SizedBox(height: 12),
 
-            // 3. المحتوى
+            // 3. Contenu
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 children: [
                   Stack(
                     children: [
-                      const Positioned(
+                      Positioned(
                         top: 15,
                         bottom: 15,
                         left: 15,
                         child: VerticalDivider(
-                          color: Color(0xFF568B50),
+                          color: isDark ? Colors.white24 : const Color(0xFF568B50),
                           thickness: 2,
                         ),
                       ),
@@ -165,8 +173,9 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
                                   margin: const EdgeInsets.only(top: 16, right: 12),
                                   width: 10,
                                   height: 10,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF283D27),
+                                  decoration: BoxDecoration(
+                                    // ✅ Point de la timeline dynamique
+                                    color: isDark ? Colors.white54 : const Color(0xFF283D27),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -174,48 +183,53 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
                                   child: Container(
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF3F7F2),
+                                      // ✅ Fond de la carte de l'activité
+                                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                                       borderRadius: BorderRadius.circular(20),
                                       boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.05),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
+                                        if (!isDark)
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.05),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
                                       ],
                                     ),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              activite.titre,
-                                              style: const TextStyle(
-                                                fontSize: 17,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF283D27),
+                                            Expanded(
+                                              child: Text(
+                                                activite.titre,
+                                                style: TextStyle(
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: theme.colorScheme.onSurface,
+                                                ),
                                               ),
                                             ),
-                                            Icon(activite.icone, color: const Color(0xFF4C8046), size: 22),
+                                            const SizedBox(width: 8),
+                                            Icon(activite.icone,
+                                                color: const Color(0xFF4C8046), size: 22),
                                           ],
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           '${activite.titre} - ${activite.date}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w600,
-                                            color: Color(0xFF4E5B4D),
+                                            color: theme.colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                         const SizedBox(height: 6),
                                         Text(
                                           activite.description,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 13,
-                                            color: Color(0xFF6B7C69),
+                                            color: theme.colorScheme.onSurfaceVariant,
                                           ),
                                         ),
                                       ],
@@ -232,47 +246,51 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
 
                   const SizedBox(height: 16),
 
-                  // 4. بطاقة إضافة ملاحظة جديدة
+                  // 4. Carte « Ajouter une note »
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF3F7F2),
+                      // ✅ Fond de la carte "Ajouter une note"
+                      color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF3F7F2),
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 12,
-                          offset: const Offset(0, 5),
-                        ),
+                        if (!isDark)
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 5),
+                          ),
                       ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Ajouter une note',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF283D27),
+                            color: theme.colorScheme.onSurface,
                           ),
                         ),
                         const SizedBox(height: 12),
                         TextField(
                           controller: _noteController,
+                          style: TextStyle(color: theme.colorScheme.onSurface),
                           decoration: InputDecoration(
                             hintText: 'Saisir une nouvelle note...',
-                            hintStyle: const TextStyle(color: Colors.grey),
+                            hintStyle: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                             filled: true,
-                            fillColor: Colors.white,
+                            // ✅ Fond du champ de texte
+                            fillColor: isDark ? const Color(0xFF2C2C2C) : Colors.white,
                             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
                             ),
                             enabledBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide(color: Colors.grey.shade300),
+                              borderSide: BorderSide(color: isDark ? Colors.white24 : Colors.grey.shade300),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
@@ -314,8 +332,11 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
         ),
       ),
 
-      // 5. شريط التنقل السفلي (Navbar) المطابق تماماً لهيكل التطبيق
+      // 5. Barre de navigation
       bottomNavigationBar: NavigationBar(
+        // ✅ Fond de la navbar dynamique
+        backgroundColor: isDark ? const Color(0xFF1E1E1E) : theme.scaffoldBackgroundColor,
+        indicatorColor: isDark ? const Color(0xFF3A5A3A) : const Color(0xFFD6E5D4),
         selectedIndex: _selectedIndex,
         onDestinationSelected: (index) {
           setState(() {
@@ -324,7 +345,7 @@ class _JournalActivitesPageState extends State<JournalActivitesPage> {
           if (widget.onNavigate != null) {
             widget.onNavigate!(index);
           } else {
-            Navigator.pop(context); // العودة للشاشة الرئيسية أو إغلاق الصفحة عند الضغط
+            Navigator.pop(context);
           }
         },
         destinations: [

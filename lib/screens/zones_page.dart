@@ -69,30 +69,33 @@ class ZonesPage extends StatelessWidget {
       BuildContext context,
       Zone zone,
       ) async {
+    final theme = Theme.of(context);
+
     final confirme = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: const Color(0xFFF2F7F1),
+        // ✅ Fond de l'alerte dynamique
+        backgroundColor: theme.colorScheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        title: const Text(
+        title: Text(
           'Supprimer la zone',
           style: TextStyle(
             fontWeight: FontWeight.w700,
-            color: Color(0xFF171E18),
+            color: theme.colorScheme.onSurface,
           ),
         ),
         content: Text(
           'Voulez-vous vraiment supprimer "${zone.nom}" ?',
-          style: const TextStyle(color: Color(0xFF3E4A40)),
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text(
+            child: Text(
               'Annuler',
-              style: TextStyle(color: Color(0xFF4A574C)),
+              style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
             ),
           ),
           FilledButton(
@@ -127,20 +130,23 @@ class ZonesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     final zones = context.watch<ZonesProvider>().zones;
     final nbAlerte = zones.where((z) => z.besoinIrrigation).length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE7EFE6),
+      // ✅ Fond de l'écran dynamique
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: Container(
-                padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 decoration: BoxDecoration(
+                  // Le dégradé vert reste le même car il est très lisible
                   gradient: const LinearGradient(
                     colors: [Color(0xFF2D6A32), Color(0xFF478E39)],
                     begin: Alignment.topLeft,
